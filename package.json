@@ -1,0 +1,44 @@
+{
+  "name": "lanodized",
+  "version": "0.0.1",
+  "description": "Administration infrastructure for LAN parties",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "migrate": "sequelize db:migrate && sequelize db:seed:all",
+    "test": "mocha src/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steers/lanodized.git"
+  },
+  "keywords": [
+    "gaming",
+    "party",
+    "discord",
+    "bot"
+  ],
+  "author": "Alexander Steers",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/steers/lanodized/issues"
+  },
+  "homepage": "https://github.com/steers/lanodized#readme",
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "koa": "^2.3.0",
+    "koa-body": "^2.3.0",
+    "koa-router": "^7.2.1",
+    "pg": "^7.3.0",
+    "sequelize": "^4.8.4"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^3.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^4.7.0",
+    "eslint-config-google": "^0.9.1",
+    "mocha": "^3.5.3",
+    "sequelize-cli": "^3.0.0-3"
+  }
+}
