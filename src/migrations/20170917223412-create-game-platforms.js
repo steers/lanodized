@@ -11,6 +11,7 @@ module.exports = {
         allowNull: false,
       },
       GameId: {
+        primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -21,6 +22,7 @@ module.exports = {
         onDelete: 'cascade',
       },
       PlatformShort: {
+        primaryKey: true,
         type: Sequelize.STRING,
         allowNull: false,
         references: {
