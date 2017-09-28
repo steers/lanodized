@@ -20,12 +20,12 @@ module.exports = {
         onUpdate: 'cascade',
         onDelete: 'cascade',
       },
-      PlatformId: {
-        type: Sequelize.INTEGER,
+      PlatformShort: {
+        type: Sequelize.STRING,
         allowNull: false,
         references: {
           model: 'Platforms',
-          key: 'id',
+          key: 'short',
         },
         onUpdate: 'cascade',
         onDelete: 'cascade',

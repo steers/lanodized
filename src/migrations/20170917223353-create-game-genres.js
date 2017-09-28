@@ -20,12 +20,12 @@ module.exports = {
         onUpdate: 'cascade',
         onDelete: 'cascade',
       },
-      GenreId: {
-        type: Sequelize.INTEGER,
+      GenreShort: {
+        type: Sequelize.STRING,
         allowNull: false,
         references: {
           model: 'Genres',
-          key: 'id',
+          key: 'short',
         },
         onUpdate: 'cascade',
         onDelete: 'cascade',

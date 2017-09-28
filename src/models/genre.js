@@ -7,9 +7,9 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
     },
     short: {
+      primaryKey: true,
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     description: {
       type: DataTypes.TEXT,
