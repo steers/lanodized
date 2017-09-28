@@ -2,16 +2,10 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('GameAliases', {
-      id: {
-        primaryKey: true,
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-      },
       name: {
+        primaryKey: true,
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       createdAt: {
         type: Sequelize.DATE,

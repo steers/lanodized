@@ -2,9 +2,9 @@
 module.exports = (sequelize, DataTypes) => {
   const GameAlias = sequelize.define('GameAlias', {
     name: {
+      primaryKey: true,
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
   });
   GameAlias.associate = (models) => {
