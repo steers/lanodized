@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (client, message) => {
+module.exports = (ctx, client, message) => {
   // avoid getting caught in bot spam loops
   if (message.author.bot) return;
   // only respond to commands using the configured prefix
@@ -15,6 +15,8 @@ module.exports = (client, message) => {
     while (args[0] && args[0].match(/^-+/)) {
       message.flags.push(args.shift().replace(/^-+/, ''));
     }
-    cmd.run(client, message, args);
+    cmd.run(client, message, args).then(() => {
+      // TODO: Measure command usage
+    });
   }
 };

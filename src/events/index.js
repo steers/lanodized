@@ -1,21 +1,22 @@
 'use strict';
-const fs = require('fs');
+const {promisify} = require('util');
+const readdir = promisify(require('fs').readdir);
 const path = require('path');
 const basename = path.basename(module.filename);
 
-module.exports = (client) => {
-  fs
-    .readdirSync(__dirname)
-    .filter((file) => {
-      return (file.indexOf('.') !== 0)
-          && (file !== basename)
-          && (file.slice(-3) === '.js');
-    })
-    .forEach((file) => {
-      let name = file.split('.')[0];
-      let event = require(path.resolve(__dirname, file));
-      client.on(name, event.bind(null, client));
-      delete require.cache[require.resolve(path.resolve(__dirname, file))];
-    });
-  return client;
-};
+async function initialize(ctx, client) {
+  const events = await readdir(__dirname);
+  events.filter((file) => {
+    return (file.indexOf('.') !== 0)
+        && (file !== basename)
+        && (file.slice(-3) === '.js');
+  }).forEach((file) => {
+    let name = file.split('.')[0];
+    let fullpath = path.resolve(__dirname, file);
+    let event = require(fullpath);
+    client.on(name, event.bind(null, ctx, client));
+    delete require.cache[require.resolve(fullpath)];
+  });
+}
+
+module.exports.initialize = initialize;
