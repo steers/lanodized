@@ -66,34 +66,56 @@ function upsertGame(ctx, definition) {
       });
       return Promise.all(aliases);
     }).then((created) => {
-      const modes = definition.modes.map((mode) => {
-        return ctx.db.GameMode.upsert(Object.assign({
+      return ctx.db.GameMode.findAll({
+        transaction: t,
+        where: {
           GameId: game.id,
-        }, mode), {
-          transaction: t,
-        });
+        },
       });
-      return Promise.all(modes);
-    }).then((created) => {
-      ctx.log(`Upsert complete for: ${game.title}`);
+    }).then((modes) => {
+      const ops = [];
+      const existing = new Set();
+      modes.forEach((mode) => {
+        let defined = definition.modes.find((def) => {
+          return def.short === mode.short;
+        });
+        if (defined) {
+          ops.push(mode.update(defined, {
+            transaction: t,
+          }));
+        }
+        existing.add(mode.short);
+      });
+      definition.modes.filter((mode) => {
+        return !existing.has(mode.short);
+      }).forEach((mode) => {
+        ops.push(ctx.db.GameMode.create(Object.assign({
+          GameId: game.id,
+        }, mode, {
+          transaction: t,
+        })));
+      });
+      return Promise.all(ops);
     });
+  }).then(() => {
+    ctx.log(`Upsert completed for ${definition.info.title}`);
+  }).catch((err) => {
+    ctx.log(`An error occurred in the upsert transaction for ${definition.info.title}`, err);
   });
 }
 
 async function initialize(ctx, client) {
-  const ops = [];
-  const games = await readdir(__dirname);
-  games.filter((file) => {
+  const files = await readdir(__dirname);
+  const games = files.filter((file) => {
     return (file.indexOf('.') !== 0)
         && (file !== basename)
         && (file.slice(-3) === '.js');
-  }).forEach((file) => {
-    let fullpath = path.resolve(__dirname, file);
-    let game = require(fullpath);
-    ops.push(upsertGame(ctx, game));
-    delete require.cache[require.resolve(fullpath)];
+  }).map((file) => {
+    return require(path.resolve(__dirname, file));
   });
-  await Promise.all(ops);
+  for (const game of games) {
+    await upsertGame(ctx, game);
+  }
 }
 
 module.exports.initialize = initialize;
