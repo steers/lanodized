@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "migrate": "sequelize db:migrate && sequelize db:seed:all",
-    "test": "mocha src/**/*.spec.js"
+    "test": "mocha src/**/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "eslint": "^4.8.0",
     "eslint-config-google": "^0.9.1",
     "mocha": "^3.5.3",
-    "sequelize-cli": "^3.0.0"
+    "sequelize-cli": "^3.0.0",
+    "should": "^13.1.0"
   }
 }
