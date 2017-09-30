@@ -5,8 +5,8 @@ const path = require('path');
 const basename = path.basename(module.filename);
 
 async function initialize(ctx, client) {
-  const commands = await readdir(__dirname);
-  commands.filter((file) => {
+  const files = await readdir(__dirname);
+  files.filter((file) => {
     return (file.indexOf('.') !== 0)
         && (file !== basename)
         && (file.slice(-3) === '.js');
