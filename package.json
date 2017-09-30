@@ -26,17 +26,15 @@
   "homepage": "https://github.com/steers/lanodized#readme",
   "dependencies": {
     "discord.js": "^11.2.1",
-    "koa": "^2.3.0",
-    "koa-body": "^2.4.0",
-    "koa-router": "^7.2.1",
+    "minimist": "^1.2.0",
     "pg": "^6.4.2",
-    "sequelize": "^4.11.1"
+    "sequelize": "^4.11.5"
   },
   "optionalDependencies": {
     "bufferutil": "^3.0.2"
   },
   "devDependencies": {
-    "eslint": "^4.7.2",
+    "eslint": "^4.8.0",
     "eslint-config-google": "^0.9.1",
     "mocha": "^3.5.3",
     "sequelize-cli": "^3.0.0"
