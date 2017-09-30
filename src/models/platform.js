@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   Platform.associate = (models) => {
-    Platform.belongsToMany(models.Game, {through: 'GamePlatforms'});
+    Platform.belongsToMany(models.Game, {through: models.GamePlatform});
   };
   return Platform;
 };

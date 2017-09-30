@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   Genre.associate = (models) => {
-    Genre.belongsToMany(models.Game, {through: 'GameGenres'});
+    Genre.belongsToMany(models.Game, {through: models.GameGenre});
   };
   return Genre;
 };
