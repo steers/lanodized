@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev-install": "npm install --only=dev && .hooks/link-hooks",
-    "migrate": "sequelize db:migrate && sequelize db:seed:all",
+    "bootstrap": "sequelize db:migrate && sequelize db:seed:all",
     "test": "mocha src/**/*.test.js",
     "lint": "eslint src/**/*.js",
     "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs eslint"
