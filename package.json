@@ -5,8 +5,11 @@
   "main": "app.js",
   "scripts": {
     "start": "node src/app.js",
+    "dev-install": "npm install --only=dev && .hooks/link-hooks",
     "migrate": "sequelize db:migrate && sequelize db:seed:all",
-    "test": "mocha src/**/*.test.js"
+    "test": "mocha src/**/*.test.js",
+    "lint": "eslint src/**/*.js",
+    "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs eslint"
   },
   "repository": {
     "type": "git",
@@ -28,16 +31,16 @@
     "discord.js": "^11.2.1",
     "minimist": "^1.2.0",
     "pg": "^6.4.2",
-    "sequelize": "^4.11.5"
+    "sequelize": "^4.18.0"
   },
   "optionalDependencies": {
     "bufferutil": "^3.0.2"
   },
   "devDependencies": {
-    "eslint": "^4.8.0",
+    "eslint": "^4.9.0",
     "eslint-config-google": "^0.9.1",
     "mocha": "^3.5.3",
     "sequelize-cli": "^3.0.0",
-    "should": "^13.1.0"
+    "should": "^13.1.2"
   }
 }

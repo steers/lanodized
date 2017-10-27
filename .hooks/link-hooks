@@ -1,0 +1,9 @@
+#!/bin/sh
+for file in $(find $(dirname $0) -type f -executable -not -name $(basename $0))
+do
+    hook=$(basename $file)
+    if [ ! -x  "$(dirname $0)/../.git/hooks/$hook" ]
+    then
+        ln -s -f ../../$file .git/hooks/$hook
+    fi
+done
