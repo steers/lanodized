@@ -15,13 +15,20 @@ async function findGameFromName(ctx, name) {
   });
   let game;
   const attrs = ['title', 'released', 'links', 'properties'];
+  const includes = [{
+    model: ctx.db.GameAlias,
+    as: 'Aliases',
+    attributes: ['name'],
+  }];
   if (alias) {
     game = await alias.getGame({
       attributes: attrs,
+      include: includes,
     });
   } else {
     game = await ctx.db.Game.findOne({
       attributes: attrs,
+      include: includes,
       where: {
         title: {
           $iLike: `%${name}%`,
@@ -42,8 +49,12 @@ async function findGameFromName(ctx, name) {
  * @return {Object[]} Up to 100 games matching the given query
  */
 async function findGames(ctx, options) {
-  const includes = [];
   const filter = options || {};
+  const includes = [{
+    model: ctx.db.GameAlias,
+    as: 'Aliases',
+    attributes: ['name'],
+  }];
   if (filter.genre) {
     includes.push({
       model: ctx.db.Genre,
@@ -60,7 +71,14 @@ async function findGames(ctx, options) {
       through: ctx.db.GamePlatform,
       attributes: ['name', 'short', 'description', 'properties'],
       where: {
-        short: filter.platform.toLowerCase(),
+        $or: {
+          short: filter.platform.toLowerCase(),
+          properties: {
+            type: {
+              $iLike: filter.platform,
+            },
+          },
+        },
       },
     });
   }
