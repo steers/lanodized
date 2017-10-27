@@ -2,6 +2,7 @@
 
 const {parseArgs} = require('../lib/parser');
 const {findGameFromName, findGames} = require('../lib/games');
+const Template = require('../lib/template');
 
 const definition = {
   name: 'game',
@@ -26,6 +27,16 @@ const configuration = {
   aliases: ['games'],
 };
 
+const template = {};
+template.detailed = Template.compile([
+  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
+].join('\n'), {noEscape: true});
+template.simple = Template.compile([
+  '{{#each .}}',
+  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
+  '{{/each}}',
+].join('\n'), {noEscape: true});
+
 /**
  * Execute the game command in response to an incoming chat message.
  * @param  {Object} ctx Application context
@@ -39,16 +50,16 @@ async function run(ctx, client, message, argv) {
   const name = args._.join(' ');
   delete args._;
 
-  let games;
+  let msg;
   if (name) {
     const game = await findGameFromName(ctx, name);
-    games = game ? [game] : [];
+    msg = game ? template.detailed(game)
+      : `Sorry, couldn't find a game with that name.`;
   } else {
-    games = await findGames(ctx, args);
+    const games = await findGames(ctx, args);
+    msg = games ? template.simple(games)
+      : `Sorry, couldn't find any games matching your query.`;
   }
-  let msg = `Here's what I found: ` + games.map((game) => {
-    return `${game.title} (${game.released.getFullYear()})`;
-  }).join(', ');
   message.reply(msg);
 };
 
