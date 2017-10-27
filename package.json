@@ -9,7 +9,7 @@
     "bootstrap": "sequelize db:migrate && sequelize db:seed:all",
     "test": "mocha $(find src -type f -name '*.test.js')",
     "lint": "eslint $(find src -type f -name '*.js')",
-    "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs eslint"
+    "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs -r eslint"
   },
   "repository": {
     "type": "git",
