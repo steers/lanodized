@@ -4,7 +4,7 @@ const Commands = require('./commands');
 const Events = require('./events');
 
 const client = new Discord.Client();
-client.config = require('./config/chat.json');
+client.config = require('./config').chat;
 
 client.commands = new Map();
 client.aliases = new Map();

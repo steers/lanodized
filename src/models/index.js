@@ -7,7 +7,7 @@ const basename = path.basename(module.filename);
 
 const db = {};
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/database.json')[env];
+const config = require('../config').database[env];
 
 const sequelize = (config.use_env_variable
   ? new Sequelize(process.env[config.use_env_variable])
