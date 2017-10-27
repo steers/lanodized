@@ -9,6 +9,11 @@ client.config = require('./config/chat.json');
 client.commands = new Map();
 client.aliases = new Map();
 
+/**
+ * Initialize the chat bot application and log into Discord.
+ * @param {Object} ctx Application context
+ * @return {Object} Chat client object
+ */
 async function initialize(ctx) {
   try {
     await Commands.initialize(ctx, client);
