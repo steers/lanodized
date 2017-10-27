@@ -1,6 +1,7 @@
 'use strict';
 
 const {parseArgs} = require('../lib/parser');
+const {findGameFromName, findGames} = require('../lib/games');
 
 const definition = {
   name: 'game',
@@ -25,60 +26,14 @@ const configuration = {
   aliases: ['games'],
 };
 
-async function findGameFromName(ctx, name) {
-  const alias = await ctx.db.GameAlias.findOne({
-    where: {
-      name: name,
-    },
-  });
-  let game;
-  const attrs = ['title', 'released', 'links', 'properties'];
-  if (alias) {
-    game = await alias.getGame({
-      attributes: attrs,
-  });
-  } else {
-    game = await ctx.db.Game.findOne({
-      attributes: attrs,
-      where: {
-        title: {
-          $iLike: `%${name}%`,
-        },
-      },
-    });
-  }
-  return game;
-}
-
-async function findGames(ctx, options) {
-  const includes = [];
-  if (options.genre) {
-    includes.push({
-      model: ctx.db.Genre,
-      through: ctx.db.GameGenre,
-      attributes: ['name', 'short', 'description'],
-      where: {
-        short: options.genre.toLowerCase(),
-      },
-    });
-  }
-  if (options.platform) {
-    includes.push({
-      model: ctx.db.Platform,
-      through: ctx.db.GamePlatform,
-      attributes: ['name', 'short', 'description', 'properties'],
-      where: {
-        short: options.platform.toLowerCase(),
-      },
-    });
-  }
-  return await ctx.db.Game.findAll({
-    attributes: ['title', 'released', 'links', 'properties'],
-    include: includes,
-    limit: 100,
-  });
-}
-
+/**
+ * Execute the game command in response to an incoming chat message.
+ * @param  {Object} ctx Application context
+ * @param  {Object} client Chat client object
+ * @param  {Object} message Chat message
+ * @param  {string[]} argv Tokenized arguments
+ * @return {undefined}
+ */
 async function run(ctx, client, message, argv) {
   const args = parseArgs(argv, definition.options);
   const name = args._.join(' ');
