@@ -4,6 +4,13 @@ const readdir = promisify(require('fs').readdir);
 const path = require('path');
 const basename = path.basename(module.filename);
 
+/**
+ * Dynamically load all chat event handlers from their local definition files
+ * and plug them into the given chat client object.
+ * @param  {Object} ctx Application context
+ * @param  {Object} client Chat client object
+ * @return {undefined}
+ */
 async function initialize(ctx, client) {
   const files = await readdir(__dirname);
   files.filter((file) => {

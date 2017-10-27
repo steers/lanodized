@@ -13,6 +13,10 @@ const sequelize = (config.use_env_variable
   ? new Sequelize(process.env[config.use_env_variable])
   : new Sequelize(config.database, config.username, config.password, config));
 
+/**
+ * Dynamically load all Sequelize model definitions.
+ * @return {Object} Database context, including Sequelize and model references.
+ */
 async function initialize() {
   const files = await readdir(__dirname);
   files.filter((file) => {

@@ -4,6 +4,15 @@ const readdir = promisify(require('fs').readdir);
 const path = require('path');
 const basename = path.basename(module.filename);
 
+/**
+ * Dynamically load all chat commands from their local definition files into
+ * maps defined in the chat client object.
+ * @param  {Object} ctx Application context
+ * @param  {Object} client Chat client object
+ * @param  {Object} client.commands Map from canonical name to command object
+ * @param  {Object} client.aliases Map from alias to canonical name
+ * @return {undefined}
+ */
 async function initialize(ctx, client) {
   const files = await readdir(__dirname);
   files.filter((file) => {

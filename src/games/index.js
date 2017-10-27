@@ -7,9 +7,9 @@ const {upsertGame} = require('../lib/games');
 
 /**
  * Dynamically synchronize all game definitions with the database.
- * @param  {[type]} ctx    [description]
- * @param  {[type]} client [description]
- * @return {[type]}        [description]
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
+ * @return {undefined}
  */
 async function initialize(ctx) {
   const files = await readdir(__dirname);
