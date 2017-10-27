@@ -7,8 +7,8 @@
     "start": "node src/app.js",
     "dev-install": "npm install --only=dev && .hooks/link-hooks",
     "bootstrap": "sequelize db:migrate && sequelize db:seed:all",
-    "test": "mocha src/**/*.test.js",
-    "lint": "eslint src/**/*.js",
+    "test": "mocha $(find src -type f -name '*.test.js')",
+    "lint": "eslint $(find src -type f -name '*.js')",
     "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs eslint"
   },
   "repository": {
