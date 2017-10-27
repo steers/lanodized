@@ -2,6 +2,11 @@
 
 const parse = require('minimist');
 
+/**
+ * Separate the given string into tokens, string-delimited but optionally grouped by quotes.
+ * @param {string} str String to be tokenized
+ * @return {string[]} Tokens split by whitespace, keeping grouped strings intact
+ */
 function tokenize(str) {
   const tokens = [];
   const pattern = /\s*(?:([^'"]\S*)|'([^'\\]*(?:\\.[^'\\]*)*)'|"([^"\\]*(?:\\.[^"\\]*)*)")\s*/g;
@@ -14,6 +19,12 @@ function tokenize(str) {
   return tokens;
 }
 
+/**
+ * Process the given array of tokens into an array of arguments.
+ * @param {string[]} argv Tokenized arguments
+ * @param {Object} options Parameter definitions
+ * @return {Object} Arguments to the defined parameters parsed from given tokens
+ */
 function parseArgs(argv, options = {}) {
   const parserOptions = {
     string: [],
