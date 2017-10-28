@@ -29,12 +29,18 @@ const configuration = {
 
 const template = {};
 template.simple = Template.compile([
-  '{{#each .}}',
-  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
+  'Here are the official games matching your query:',
+  '{{#each .}}**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
   '{{/each}}',
 ].join('\n'), {noEscape: true});
 template.detailed = Template.compile([
-  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
+  '**{{title}}** ({{formatDate released "year"}})',
+  'Aliases: {{#join Aliases delim=", "}}`{{name}}`{{/join}}',
+  'Genres: {{#join Genres delim=", "}}{{name}} (`{{short}}`){{/join}}',
+  'Platforms: {{#join Platforms delim=", "}}`{{short}}`{{#if properties}} ({{properties.type}}){{/if}}{{/join}}',
+  'Modes:',
+  '{{#each Modes}} - `{{short}}` [{{serverSize}}/game {{groupSize}}/group]{{#if description}} : {{description}}{{/if}}',
+  '{{/each}}',
 ].join('\n'), {noEscape: true});
 
 /**
@@ -54,11 +60,11 @@ async function run(ctx, client, message, argv) {
   if (name) {
     const game = await findGameFromName(ctx, name);
     msg = game ? template.detailed(game)
-      : `Sorry, couldn't find a game with that name.`;
+      : `Sorry, couldn't find an official game named anything like that.`;
   } else {
     const games = await findGames(ctx, args);
-    msg = games ? template.simple(games)
-      : `Sorry, couldn't find any games matching your query.`;
+    msg = games.length ? template.simple(games)
+      : `Sorry, couldn't find any official games matching your query.`;
   }
   await message.reply(msg);
 };

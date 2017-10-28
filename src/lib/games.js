@@ -15,11 +15,28 @@ async function findGameFromName(ctx, name) {
   });
   let game;
   const attrs = ['title', 'released', 'links', 'properties'];
-  const includes = [{
-    model: ctx.db.GameAlias,
-    as: 'Aliases',
-    attributes: ['name'],
-  }];
+  const includes = [
+    {
+      model: ctx.db.GameAlias,
+      as: 'Aliases',
+      attributes: ['name'],
+    },
+    {
+      model: ctx.db.GameMode,
+      as: 'Modes',
+      attributes: ['name', 'short', 'serverSize', 'groupSize', 'description'],
+    },
+    {
+      model: ctx.db.Genre,
+      through: ctx.db.GameGenre,
+      attributes: ['name', 'short', 'description'],
+    },
+    {
+      model: ctx.db.Platform,
+      through: ctx.db.GamePlatform,
+      attributes: ['name', 'short', 'description', 'properties'],
+    },
+  ];
   if (alias) {
     game = await alias.getGame({
       attributes: attrs,
