@@ -8,6 +8,10 @@
     "sourceType": "module"
   },
   "rules": {
-    "max-len": [2, {"code": 100}]
+    "max-len": [2, {
+      "code": 100,
+      "ignoreStrings": true,
+      "ignoreTemplateLiterals": true
+    }]
   }
 }
