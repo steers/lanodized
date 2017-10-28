@@ -90,23 +90,21 @@ async function findGames(ctx, options) {
 }
 
 /**
- * Create or update the given game definition in the database, complete
- * with aliases, game modes, genres and platforms.
+ * Create or update the given game definition in the database.
  * @param {Object} ctx Application context, including db instance.
  * @param {Object} definition Complete game definition to sync.
- * @return {Promise} Transaction containing the entire upsert.
+ * @return {Promise}
  */
 function upsertGame(ctx, definition) {
   return ctx.db.sequelize.transaction((t) => {
-    let game;
     return ctx.db.Game.findOne({
       transaction: t,
       where: {
         title: definition.info.title,
       },
-    }).then((entity) => {
-      if (entity) {
-        return entity.update(definition.info, {
+    }).then((game) => {
+      if (game) {
+        return game.update(definition.info, {
           transaction: t,
         });
       } else {
@@ -114,56 +112,90 @@ function upsertGame(ctx, definition) {
           transaction: t,
         });
       }
-    }).then((entity) => {
-      game = entity;
-      return Promise.all([
-        ctx.db.Genre.findAll({
-          transaction: t,
-          where: {
-            short: {
-              $in: definition.genres,
-            },
-          },
-        }),
-        ctx.db.Platform.findAll({
-          transaction: t,
-          where: {
-            short: {
-              $in: definition.platforms,
-            },
-          },
-        }),
-      ]);
-    }).then(([genres, platforms]) => {
-      game.setGenres(genres);
-      game.setPlatforms(platforms);
-      return game.save({transaction: t});
-    }).then((entity) => {
-      const aliases = definition.aliases.map((alias) => {
-        return ctx.db.GameAlias.upsert({
-          name: alias,
-          GameId: game.id,
-        }, {
-          transaction: t,
-        });
+    });
+  }).then((game) => {
+    return upsertGameGenres(ctx, definition, game);
+  }).then((game) => {
+    return upsertGamePlatforms(ctx, definition, game);
+  }).then((game) => {
+    const ops = definition.aliases.map((alias) => {
+      return ctx.db.GameAlias.upsert({
+        name: alias,
+        GameId: game.id,
       });
-      return Promise.all(aliases);
-    }).then((created) => {
-      return ctx.db.GameMode.findAll({
+    });
+    ops.push(upsertGameModes(ctx, definition, game.id));
+    return Promise.all(ops);
+  }).then(() => {
+    ctx.log(`Upsert completed for ${definition.info.title}`);
+  }).catch((err) => {
+    ctx.log(`An error occurred in the upsert transaction for ${definition.info.title}`, err);
+  });
+}
+
+/**
+ * Associate the given game with its defined genres in the database.
+ * @param {Object} ctx Application context, including db instance.
+ * @param {Object} definition Complete game definition to sync.
+ * @param {Object} game Game entity to update
+ * @return {Promise}
+ */
+function upsertGameGenres(ctx, definition, game) {
+  return ctx.db.Genre.findAll({
+    where: {
+      short: {
+        $in: definition.genres,
+      },
+    },
+  }).then((genres) => {
+    game.setGenres(genres);
+    return game.save();
+  });
+}
+
+/**
+ * Associate the given game with its defined platforms in the database.
+ * @param {Object} ctx Application context, including db instance.
+ * @param {Object} definition Complete game definition to sync.
+ * @param {Object} game Game entity to update
+ * @return {Promise}
+ */
+function upsertGamePlatforms(ctx, definition, game) {
+  return ctx.db.Platform.findAll({
+    where: {
+      short: {
+        $in: definition.platforms,
+      },
+    },
+  }).then((platforms) => {
+    game.setPlatforms(platforms);
+    return game.save();
+  });
+}
+
+/**
+ * Associate the given game with its defined platforms in the database.
+ * @param {Object} ctx Application context, including db instance.
+ * @param {Object} definition Complete game definition to sync.
+ * @param {number} gameId Game entity ID corresponding to the defined modes
+ * @return {Promise}
+ */
+function upsertGameModes(ctx, definition, gameId) {
+  return ctx.db.sequelize.transaction((t) => {
+    return ctx.db.GameMode.findAll({
         transaction: t,
         where: {
-          GameId: game.id,
+          GameId: gameId,
         },
-      });
     }).then((modes) => {
       const ops = [];
       const existing = new Set();
       modes.forEach((mode) => {
-        let defined = definition.modes.find((def) => {
+        let created = definition.modes.find((def) => {
           return def.short === mode.short;
         });
-        if (defined) {
-          ops.push(mode.update(defined, {
+        if (created) {
+          ops.push(mode.update(created, {
             transaction: t,
           }));
         }
@@ -172,18 +204,13 @@ function upsertGame(ctx, definition) {
       definition.modes.filter((mode) => {
         return !existing.has(mode.short);
       }).forEach((mode) => {
-        ops.push(ctx.db.GameMode.create(Object.assign({
-          GameId: game.id,
-        }, mode, {
+        const addition = Object.assign({GameId: gameId}, mode);
+        ops.push(ctx.db.GameMode.create(addition, {
           transaction: t,
-        })));
+        }));
       });
       return Promise.all(ops);
     });
-  }).then(() => {
-    ctx.log(`Upsert completed for ${definition.info.title}`);
-  }).catch((err) => {
-    ctx.log(`An error occurred in the upsert transaction for ${definition.info.title}`, err);
   });
 }
 
