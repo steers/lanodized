@@ -25,7 +25,8 @@ function tokenize(str) {
  * @param {Object} options Parameter definitions
  * @return {Object} Arguments to the defined parameters parsed from given tokens
  */
-function parseArgs(argv, options = {}) {
+function parseArgs(argv, options) {
+  options = options || {};
   const parserOptions = {
     string: [],
     boolean: [],
