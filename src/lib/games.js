@@ -170,7 +170,7 @@ function upsertGamePlatforms(ctx, definition, game) {
 }
 
 /**
- * Synchronize the modes defined for a game with what's in the database.
+ * Synchronize the modes for a game in the database with the given definition.
  * @param {Object} ctx Application context, including db instance.
  * @param {Object} definition Complete game definition to sync.
  * @param {number} gameId Game entity ID corresponding to the defined modes
