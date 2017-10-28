@@ -2,12 +2,17 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('GameModes', {
+      id: {
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       short: {
-        primaryKey: true,
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -34,7 +39,6 @@ module.exports = {
         allowNull: false,
       },
       GameId: {
-        primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
