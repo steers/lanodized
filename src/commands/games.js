@@ -6,6 +6,7 @@ const Template = require('../lib/template');
 
 const definition = {
   name: 'game',
+  aliases: ['games'],
   description: 'Query information for official games',
   usage: '[options] [name]',
   options: {
@@ -24,17 +25,16 @@ const definition = {
 
 const configuration = {
   enabled: true,
-  aliases: ['games'],
 };
 
 const template = {};
-template.detailed = Template.compile([
-  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
-].join('\n'), {noEscape: true});
 template.simple = Template.compile([
   '{{#each .}}',
   '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
   '{{/each}}',
+].join('\n'), {noEscape: true});
+template.detailed = Template.compile([
+  '**{{title}}** ({{formatDate released "year"}}) `[{{#join Aliases delim="|"}}{{name}}{{/join}}]`',
 ].join('\n'), {noEscape: true});
 
 /**
@@ -60,7 +60,7 @@ async function run(ctx, client, message, argv) {
     msg = games ? template.simple(games)
       : `Sorry, couldn't find any games matching your query.`;
   }
-  message.reply(msg);
+  await message.reply(msg);
 };
 
 module.exports = {

@@ -22,7 +22,7 @@ async function initialize(ctx, client) {
   }).forEach((file) => {
     let cmd = require(path.resolve(__dirname, file));
     client.commands.set(cmd.help.name, cmd);
-    cmd.conf.aliases.forEach((alias) => {
+    cmd.help.aliases.forEach((alias) => {
       client.aliases.set(alias, cmd.help.name);
     });
   });

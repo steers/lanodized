@@ -10,7 +10,7 @@ Handlebars.registerHelper('formatDate', (datetime, format) => {
 });
 
 Handlebars.registerHelper('join', (context, options) => {
-  const delim = options.hash['delim'] || '/';
+  const delim = options.hash.delim || ' ';
   const templated = context.map((elem) => {
     return options.fn(elem);
   });
