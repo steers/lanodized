@@ -118,14 +118,10 @@ function upsertGame(ctx, definition) {
   }).then((game) => {
     return upsertGamePlatforms(ctx, definition, game);
   }).then((game) => {
-    const ops = definition.aliases.map((alias) => {
-      return ctx.db.GameAlias.upsert({
-        name: alias,
-        GameId: game.id,
-      });
-    });
-    ops.push(upsertGameModes(ctx, definition, game.id));
-    return Promise.all(ops);
+    return Promise.all([
+      upsertGameAliases(ctx, definition, game.id),
+      upsertGameModes(ctx, definition, game.id),
+    ]);
   }).then(() => {
     ctx.log(`Upsert completed for ${definition.info.title}`);
   }).catch((err) => {
@@ -174,7 +170,7 @@ function upsertGamePlatforms(ctx, definition, game) {
 }
 
 /**
- * Associate the given game with its defined platforms in the database.
+ * Synchronize the modes defined for a game with what's in the database.
  * @param {Object} ctx Application context, including db instance.
  * @param {Object} definition Complete game definition to sync.
  * @param {number} gameId Game entity ID corresponding to the defined modes
@@ -185,32 +181,50 @@ function upsertGameModes(ctx, definition, gameId) {
     return ctx.db.GameMode.findAll({
         transaction: t,
         where: {
-          GameId: gameId,
+          $and: {
+            GameId: gameId,
+            short: {
+              $in: definition.modes.map((mode) => mode.short),
+            },
+          },
         },
     }).then((modes) => {
-      const ops = [];
-      const existing = new Set();
-      modes.forEach((mode) => {
-        let created = definition.modes.find((def) => {
-          return def.short === mode.short;
+      return Promise.all(definition.modes.map((defn) => {
+        const mode = modes.find((existing) => {
+          return existing.short === defn.short;
         });
-        if (created) {
-          ops.push(mode.update(created, {
+        if (mode) {
+          return mode.update(defn, {
             transaction: t,
-          }));
+          });
+        } else {
+          const addition = Object.assign({GameId: gameId}, defn);
+          return ctx.db.GameMode.create(addition, {
+            transaction: t,
+          });
         }
-        existing.add(mode.short);
-      });
-      definition.modes.filter((mode) => {
-        return !existing.has(mode.short);
-      }).forEach((mode) => {
-        const addition = Object.assign({GameId: gameId}, mode);
-        ops.push(ctx.db.GameMode.create(addition, {
-          transaction: t,
-        }));
-      });
-      return Promise.all(ops);
+      }));
     });
+  });
+}
+
+/**
+ * Associate the given game with its defined aliases in the database.
+ * @param {Object} ctx Application context, including db instance.
+ * @param {Object} definition Complete game definition to sync.
+ * @param {number} gameId Game entity ID corresponding to the defined aliases
+ * @return {Promise}
+ */
+function upsertGameAliases(ctx, definition, gameId) {
+  return ctx.db.sequelize.transaction((t) => {
+    return Promise.all(definition.aliases.map((alias) => {
+      return ctx.db.GameAlias.upsert({
+        name: alias,
+        GameId: gameId,
+      }, {
+        transaction: t,
+      });
+    }));
   });
 }
 
