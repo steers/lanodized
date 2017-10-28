@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
   Event.associate = (models) => {
     Event.belongsTo(models.EventType);
     Event.belongsTo(models.Party);
-    Event.belongsToMany(models.Game, {through: 'EventGames'});
+    Event.belongsToMany(models.GameMode, {through: models.EventGameMode});
   };
   return Event;
 };

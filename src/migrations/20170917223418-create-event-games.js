@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('GamePlatforms', {
+    return queryInterface.createTable('EventGameModes', {
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -11,6 +11,7 @@ module.exports = {
         allowNull: false,
       },
       EventId: {
+        primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -20,11 +21,12 @@ module.exports = {
         onUpdate: 'cascade',
         onDelete: 'cascade',
       },
-      GameId: {
+      GameModeId: {
+        primaryKey: true,
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Games',
+          model: 'GameModes',
           key: 'id',
         },
         onUpdate: 'cascade',
@@ -34,6 +36,6 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('GamePlatforms');
+    return queryInterface.dropTable('EventGameModes');
   },
 };
