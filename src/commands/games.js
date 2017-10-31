@@ -25,6 +25,7 @@ const definition = {
 
 const configuration = {
   enabled: true,
+  direct: true,
 };
 
 const template = {};
@@ -66,7 +67,13 @@ async function run(ctx, client, message, argv) {
     msg = games.length ? template.simple(games)
       : `Sorry, couldn't find any official games matching your query.`;
   }
-  await message.reply(msg);
+  if (configuration.direct) {
+    const channel = await message.author.createDM();
+    await channel.send(msg);
+    await channel.delete();
+  } else {
+    await message.reply(msg);
+  }
 };
 
 module.exports = {

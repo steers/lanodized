@@ -13,6 +13,7 @@ const definition = {
 
 const configuration = {
   enabled: true,
+  direct: true,
 };
 
 /**
@@ -42,7 +43,16 @@ async function run(ctx, client, message, argv) {
     }
     msg = lines.join('\n');
   }
-  await message.reply(msg);
+  message.guild.emojis.forEach((val, key) => {
+    console.log(`${key}: ${val}`);
+  });
+  if (configuration.direct) {
+    const channel = await message.author.createDM();
+    await channel.send(msg);
+    await channel.delete();
+  } else {
+    await message.reply(msg);
+  }
 }
 
 module.exports = {

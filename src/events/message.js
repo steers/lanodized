@@ -15,6 +15,10 @@ module.exports = (ctx, client, message) => {
   if (!cmd) return;
 
   cmd.run(ctx, client, message, argv).then(() => {
-    // TODO: Measure command usage
+    if (cmd.conf.direct && message.channel.type !== 'dm') {
+      message.delete().catch((err) => {
+        ctx.log(`Tried to delete message ${message.id} for direct command ${command} in non-DM channel, but failed: ${err.toString()}`);
+      });
+    }
   });
 };
