@@ -43,9 +43,6 @@ async function run(ctx, client, message, argv) {
     }
     msg = lines.join('\n');
   }
-  message.guild.emojis.forEach((val, key) => {
-    console.log(`${key}: ${val}`);
-  });
   if (configuration.direct) {
     const channel = await message.author.createDM();
     await channel.send(msg);
