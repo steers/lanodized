@@ -9,6 +9,13 @@ const db = {};
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config').database[env];
 
+// Disable SQL logging by default
+if (!config.hasOwnProperty('logging')) {
+  config.logging = false;
+} else if (config.logging) {
+  config.logging = console.log;
+}
+
 config.operatorsAliases = {
   $eq: Sequelize.Op.eq,
   $ne: Sequelize.Op.ne,
