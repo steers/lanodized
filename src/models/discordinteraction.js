@@ -12,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   DiscordInteraction.associate = (models) => {
-    DiscordInteraction.hasOne(models.DiscordUser, {as: 'User'});
-    DiscordInteraction.hasOne(models.DiscordChannel, {as: 'Channel'});
-    DiscordInteraction.hasOne(models.DiscordGuild, {as: 'Guild'});
+    DiscordInteraction.belongsTo(models.DiscordUser, {as: 'User'});
+    DiscordInteraction.belongsTo(models.DiscordChannel, {as: 'Channel'});
+    DiscordInteraction.belongsTo(models.DiscordGuild, {as: 'Guild'});
   };
   return DiscordInteraction;
 };
