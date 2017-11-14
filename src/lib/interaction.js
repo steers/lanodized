@@ -9,9 +9,10 @@
  * @param {Object} command Command object
  * @param {string} alias Command alias used
  * @param {Object} result Command result
+ * @return {Promise} Created interaction
  */
 async function executedCommand(ctx, message, command, alias, result) {
-  await ctx.db.sequelize.transaction(async (t) => {
+  return await ctx.db.sequelize.transaction(async (t) => {
     let guild = null;
     switch (message.channel.type) {
       case 'text': {
@@ -46,7 +47,7 @@ async function executedCommand(ctx, message, command, alias, result) {
         GuildId: guild ? guild.id : null,
       },
     });
-    await ctx.db.DiscordInteraction.create({
+    return await ctx.db.DiscordInteraction.create({
       command: command.help.name,
       alias: alias,
       properties: result || null,
