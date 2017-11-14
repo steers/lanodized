@@ -37,7 +37,7 @@ module.exports = {
       },
       ChannelId: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
           model: 'DiscordChannels',
           key: 'id',
@@ -47,7 +47,7 @@ module.exports = {
       },
       GuildId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'DiscordGuilds',
           key: 'id',
