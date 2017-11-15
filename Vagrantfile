@@ -18,5 +18,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", path: "bin/provision/postgres.sh"
   config.vm.provision "shell", path: "bin/provision/node.sh"
+  config.vm.provision "shell", privileged: false, path: "bin/provision/bootstrap.sh"
 
 end

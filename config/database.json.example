@@ -1,15 +1,15 @@
 {
   "development": {
-    "username": "DEV_USER",
-    "password": "PASSWORD",
-    "database": "dev_db",
+    "username": "lanodizer",
+    "password": "insecure",
+    "database": "lanodized_dev",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
   "test": {
-    "username": "TEST_USER",
-    "password": "PASSWORD",
-    "database": "test_db",
+    "username": "lanodizer",
+    "password": "insecure",
+    "database": "lanodized_test",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },

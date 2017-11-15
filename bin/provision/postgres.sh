@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 APP_DB_USER=lanodizer
-APP_DB_PASS=insecure
+APP_DB_PASS=${DB_PASS:-insecure}
 APP_DB_NAME=${DB_NAME:-lanodized_dev}
 
 # Should match the version of PostgreSQL that is installed, optionally specified
