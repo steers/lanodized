@@ -20,7 +20,7 @@ module.exports = async (ctx, client, message) => {
 
   // Make a record of the interaction for the calculation of metrics
   try {
-    await interaction.executedCommand(ctx, message, cmd, command, result);
+    await interaction.record(ctx, message, cmd, command, result);
   } catch (err) {
     ctx.log(`Encountered an error while recording command interaction.`, 'error', err);
   }
