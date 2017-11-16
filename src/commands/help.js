@@ -51,14 +51,14 @@ async function run(ctx, client, message, argv) {
   }
 
   const result = {};
+  const actions = [];
   try {
-    const actions = [];
-    actions.concat(await chat.replyDirect(message, msg));
-    result.actions = actions;
+    actions.push(...await chat.replyDirect(message, msg));
   } catch (err) {
     result.error = err.toString().slice(0, 256);
     ctx.log(`Encountered an error running ${definition.name}`, 'error', err);
   }
+  result.actions = actions;
   return result;
 }
 
