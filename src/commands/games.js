@@ -2,6 +2,7 @@
 
 const {parseArgs} = require('../lib/parser');
 const {findGameFromName, findGames} = require('../lib/games');
+const chat = require('../lib/chat');
 const Template = require('../lib/template');
 
 const definition = {
@@ -50,7 +51,7 @@ template.detailed = Template.compile([
  * @param  {Object} client Chat client object
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
- * @return {undefined}
+ * @return {Object} Result metadata from command execution.
  */
 async function run(ctx, client, message, argv) {
   const args = parseArgs(argv, definition.options);
@@ -67,13 +68,17 @@ async function run(ctx, client, message, argv) {
     msg = games.length ? template.simple(games)
       : `Sorry, couldn't find any official games matching your query.`;
   }
-  if (configuration.direct) {
-    const channel = await message.author.createDM();
-    await channel.send(msg);
-    await channel.delete();
-  } else {
-    await message.reply(msg);
+
+  const result = {};
+  try {
+    const actions = [];
+    actions.concat(await chat.replyDirect(message, msg));
+    result.actions = actions;
+  } catch (err) {
+    result.error = err.toString().slice(0, 256);
+    ctx.log(`Encountered an error running ${definition.name}`, 'error', err);
   }
+  return result;
 };
 
 module.exports = {

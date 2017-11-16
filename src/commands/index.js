@@ -21,6 +21,7 @@ async function initialize(ctx, client) {
         && (file.slice(-3) === '.js');
   }).forEach((file) => {
     let cmd = require(path.resolve(__dirname, file));
+    if (!cmd.conf.enabled) return;
     client.commands.set(cmd.help.name, cmd);
     cmd.help.aliases.forEach((alias) => {
       client.aliases.set(alias, cmd.help.name);

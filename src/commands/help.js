@@ -1,6 +1,7 @@
 'use strict';
 
 const {parseArgs} = require('../lib/parser');
+const chat = require('../lib/chat');
 const Help = require('../lib/help');
 
 const definition = {
@@ -22,13 +23,18 @@ const configuration = {
  * @param  {Object} client Chat client object
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
- * @return {undefined}
+ * @return {Object} Result metadata from command execution.
  */
 async function run(ctx, client, message, argv) {
   const args = parseArgs(argv, definition.options);
-  const [command] = args._;
+  let [command] = args._;
+
   let msg;
   if (command) {
+    // Strip off the command prefix if it was included in the argument
+    if (command.startsWith(client.config.prefix)) {
+      command = command.slice(client.config.prefix.length);
+    }
     // Try to find the command with the given name/alias
     const cmd = client.commands.get(command) || client.commands.get(client.aliases.get(command));
     msg = cmd ? Help.usage(cmd.help, {prefix: client.config.prefix, detailed: true})
@@ -43,13 +49,17 @@ async function run(ctx, client, message, argv) {
     }
     msg = lines.join('\n');
   }
-  if (configuration.direct) {
-    const channel = await message.author.createDM();
-    await channel.send(msg);
-    await channel.delete();
-  } else {
-    await message.reply(msg);
+
+  const result = {};
+  try {
+    const actions = [];
+    actions.concat(await chat.replyDirect(message, msg));
+    result.actions = actions;
+  } catch (err) {
+    result.error = err.toString().slice(0, 256);
+    ctx.log(`Encountered an error running ${definition.name}`, 'error', err);
   }
+  return result;
 }
 
 module.exports = {

@@ -14,7 +14,7 @@ module.exports = async (ctx, client) => {
       };
     });
   } catch (err) {
-    ctx.log(`Unable to record information from all connected guilds: ${err.message}`);
+    ctx.log(`Unable to record information from all connected guilds.`, 'error', err);
   }
-  ctx.log(`${client.user.username} is online, connected to ${client.guilds.size} guild(s)`);
+  ctx.log(`${client.user.username} is online, connected to ${client.guilds.size} guild(s)`, 'info');
 };
