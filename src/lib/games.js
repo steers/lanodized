@@ -148,7 +148,8 @@ function upsertGame(ctx, definition) {
 
 /**
  * Associate the given game with its defined genres in the database.
- * @param {Object} ctx Application context, including db instance.
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
  * @param {Object} definition Complete game definition to sync.
  * @param {Object} game Game entity to update
  * @return {Promise}
@@ -168,7 +169,8 @@ function upsertGameGenres(ctx, definition, game) {
 
 /**
  * Associate the given game with its defined platforms in the database.
- * @param {Object} ctx Application context, including db instance.
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
  * @param {Object} definition Complete game definition to sync.
  * @param {Object} game Game entity to update
  * @return {Promise}
@@ -188,7 +190,8 @@ function upsertGamePlatforms(ctx, definition, game) {
 
 /**
  * Synchronize the modes for a game in the database with the given definition.
- * @param {Object} ctx Application context, including db instance.
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
  * @param {Object} definition Complete game definition to sync.
  * @param {number} gameId Game entity ID corresponding to the defined modes
  * @return {Promise}
@@ -227,7 +230,8 @@ function upsertGameModes(ctx, definition, gameId) {
 
 /**
  * Associate the given game with its defined aliases in the database.
- * @param {Object} ctx Application context, including db instance.
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
  * @param {Object} definition Complete game definition to sync.
  * @param {number} gameId Game entity ID corresponding to the defined aliases
  * @return {Promise}
