@@ -4,11 +4,13 @@ const {parseArgs} = require('../lib/parser');
 const voting = require('../lib/voting');
 const Template = require('../lib/template');
 
+const DEFAULT_POLL_DURATION = 1;
+
 const definition = {
   name: 'vote',
   aliases: ['poll', 'rtv'],
   description: 'Create a reaction poll on a subject or set of alternatives',
-  usage: '[-o outcome -e emoji]... <subject>',
+  usage: '[options] [-o outcome -e emoji]... <subject>',
   options: {
     outcome: {
       type: 'string',
@@ -19,6 +21,12 @@ const definition = {
       type: 'string',
       alias: 'e',
       description: 'Emoji to consider a vote for the alternative',
+    },
+    duration: {
+      type: 'integer',
+      alias: 'd',
+      default: DEFAULT_POLL_DURATION,
+      description: `Poll duration, in minutes (default: ${DEFAULT_POLL_DURATION})`,
     },
   },
 };
@@ -35,9 +43,6 @@ template.vote = Template.compile([
   '{{/each}}',
   '{{#if opinion}}What do you think? Cast your vote by reaction!{{/if}}',
 ].join('\n'), {noEscape: true});
-
-// DEBUG: Open polls
-const polls = new Map();
 
 /**
  * Execute the defined command in response to an incoming chat message.
@@ -61,7 +66,6 @@ async function run(ctx, client, message, argv) {
     emojis = Array.isArray(args.emoji) ? args.emoji : [args.emoji];
   }
 
-  const actions = [];
   if (outcomes.length !== emojis.length) {
     throw new Error(`Need the same number of outcomes as emoji (${outcomes.length} != ${emoji.length})`);
   }
@@ -80,16 +84,19 @@ async function run(ctx, client, message, argv) {
     alternatives: alternatives,
     opinion: outcomes.length === 0,
   };
-
   const content = `Poll time! ${message.author} has called a vote:\n${template.vote(poll)}`;
-  const pollMessage = await message.channel.send(content);
-  const ballotBox = new voting.BallotBox(ctx, client, pollMessage, message.author, alternatives);
-  await ballotBox.open(60000); // Fixed at 1 minute for now
-  polls.set(pollMessage.id, ballotBox);
 
-  result.poll = poll;
-  result.actions = actions;
-  return result;
+  const actions = [];
+  const pollMessage = await message.channel.send(content);
+  actions.push('created poll');
+  const ballotBox = new voting.BallotBox(ctx, client, pollMessage, message.author, poll);
+  await ballotBox.start(args.duration);
+  actions.push('opened voting');
+
+  return {
+    poll: poll,
+    actions: actions,
+  };
 }
 
 module.exports = {

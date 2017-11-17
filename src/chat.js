@@ -8,6 +8,7 @@ client.config = require('./config').chat;
 
 client.commands = new Map();
 client.aliases = new Map();
+client.polls = new Map();
 
 /**
  * Initialize the chat bot application and log into Discord.
