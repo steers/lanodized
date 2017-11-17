@@ -74,7 +74,7 @@ async function run(ctx, client, message, argv) {
   const actions = [];
   try {
     if (configuration.direct) {
-      actions.push(...await chat.replyDirect(message, content));
+      actions.push(...await chat.respondDirect(message, content));
     } else {
       actions.push(...await chat.reply(message, content));
     }

@@ -14,24 +14,37 @@ async function reply(message, content) {
 }
 
 /**
+ * Respond to the given message in the same channel it was sent from.
+ * @param  {Object} message Chat message
+ * @param  {string} content Reply content
+ * @return {string[]} List of actions taken, if any, for debugging.
+ */
+async function respond(message, content) {
+  const actions = [];
+  await message.channel.send(content);
+  actions.push('responded');
+  return actions;
+}
+
+/**
  * Respond to the given message in a direct channel.
  * @param  {Object} message Chat message
  * @param  {string} content Reply content
  * @return {string[]} List of actions taken, if any, for debugging.
  */
-async function replyDirect(message, content) {
+async function respondDirect(message, content) {
   const actions = [];
   switch (message.channel.type) {
     case 'dm':
     case 'group': {
       await message.channel.send(content);
-      actions.push('replied directly');
+      actions.push('responded directly');
       break;
     }
     default: {
       const channel = await message.author.createDM();
       await channel.send(content);
-      actions.push('replied directly');
+      actions.push('responded directly');
       await channel.delete();
       if (message.deletable) {
         await message.delete();
@@ -45,5 +58,6 @@ async function replyDirect(message, content) {
 
 module.exports = {
   reply,
-  replyDirect,
+  respond,
+  respondDirect,
 };

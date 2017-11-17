@@ -72,7 +72,7 @@ async function run(ctx, client, message, argv) {
   const result = {};
   const actions = [];
   try {
-    actions.push(...await chat.replyDirect(message, msg));
+    actions.push(...await chat.respondDirect(message, msg));
   } catch (err) {
     result.error = err.toString().slice(0, 256);
     ctx.log(`Encountered an error running ${definition.name}`, 'error', err);
