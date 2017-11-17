@@ -168,7 +168,7 @@ class BallotBox {
     };
     await this.poll.update({outcome: result});
 
-    const response = `${this.pollster}, The results are in for **${this.subject}**:\n${template.results(result)}`;
+    const response = `${this.pollster}, The results are in for **${this.definition.subject}**:\n${template.results(result)}`;
     await this.message.unpin();
     await this.message.reply(response);
 
