@@ -1,7 +1,7 @@
 'use strict';
 
 const {tokenize} = require('../lib/parser');
-const interaction = require('../lib/interaction');
+const Interaction = require('../lib/interaction');
 
 module.exports = async (ctx, client, message) => {
   // avoid getting caught in bot spam loops
@@ -12,16 +12,17 @@ module.exports = async (ctx, client, message) => {
   if (content.indexOf(client.config.prefix) !== 0) return;
   // the first token (sans prefix) should map to a command
   const argv = tokenize(content.slice(client.config.prefix.length));
-  const command = argv.shift().toLowerCase();
-  const cmd = client.commands.get(command) || client.commands.get(client.aliases.get(command));
+  const alias = argv.shift().toLowerCase();
+  const command = client.commands.get(alias) || client.commands.get(client.aliases.get(alias));
+  if (!command) return;
 
-  if (!cmd) return;
-  const result = await cmd.run(ctx, client, message, argv);
-
-  // Make a record of the interaction for the calculation of metrics
+  const interaction = await Interaction.record(ctx, message, command, alias);
+  const result = {};
   try {
-    await interaction.record(ctx, message, cmd, command, result);
+    Object.assign(result, await command.run(ctx, client, message, argv));
   } catch (err) {
-    ctx.log(`Encountered an error while recording command interaction.`, 'error', err);
+    ctx.log(`Encountered an error while running ${command.help.name}.`, 'error', err);
+    result.error = err.toString().slice(0, 256);
   }
+  await interaction.update({properties: result});
 };

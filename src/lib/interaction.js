@@ -11,7 +11,7 @@
  * @param {Object} result Command result
  * @return {Promise} Created interaction
  */
-async function record(ctx, message, command, alias, result) {
+async function record(ctx, message, command, alias, result = null) {
   return await ctx.db.sequelize.transaction(async (t) => {
     let guild = null;
     switch (message.channel.type) {
