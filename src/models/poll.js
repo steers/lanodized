@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   Poll.associate = (models) => {
+    Poll.hasMany(models.PollVote, {as: 'Votes'});
     Poll.belongsTo(models.DiscordUser, {as: 'User'});
     Poll.belongsTo(models.DiscordChannel, {as: 'Channel'});
   };

@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   DiscordChannel.associate = (models) => {
     DiscordChannel.hasMany(models.DiscordInteraction, {as: 'Interactions'});
     DiscordChannel.belongsTo(models.DiscordGuild, {as: 'Guild'});
+    DiscordChannel.hasMany(models.Poll);
   };
   return DiscordChannel;
 };
