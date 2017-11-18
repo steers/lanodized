@@ -82,6 +82,10 @@ async function run(ctx, client, message, argv) {
   };
   const actions = [];
   try {
+    // Some commands make sense in a DM with the bot, but voting is not one of them
+    if (message.channel.type === 'dm') {
+      throw new Error(`It's just you and me in here, wouldn't you rather ask more people?`);
+    }
     if (outcomes.length !== emojis.length) {
       throw new Error(`Need the same number of outcomes as emoji (${outcomes.length} != ${emojis.length})`);
     }
