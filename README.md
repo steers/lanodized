@@ -25,5 +25,6 @@ If you would like to change the permissions being granted, you can use [this han
 - Read Messages
 - Send Messages
 - Manage Messages (requires 2FA)
+- Add Reactions
 
-<https://discordapp.com/api/oauth2/authorize?scope=bot&permissions=11264&client_id=CLIENT_ID>
+<https://discordapp.com/api/oauth2/authorize?scope=bot&permissions=11328&client_id=CLIENT_ID>
