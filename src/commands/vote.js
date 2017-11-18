@@ -5,8 +5,6 @@ const chat = require('../lib/chat');
 const voting = require('../lib/voting');
 const Template = require('../lib/template');
 
-const DEFAULT_POLL_DURATION = 1;
-
 const definition = {
   name: 'vote',
   aliases: ['poll', 'rtv'],
@@ -26,8 +24,8 @@ const definition = {
     duration: {
       type: 'integer',
       alias: 'd',
-      default: DEFAULT_POLL_DURATION,
-      description: `Poll duration, in minutes (default: ${DEFAULT_POLL_DURATION})`,
+      default: voting.DEFAULT_POLL_DURATION,
+      description: `Poll duration, in minutes (default: ${voting.DEFAULT_POLL_DURATION})`,
     },
   },
 };
@@ -43,6 +41,13 @@ template.vote = Template.compile([
   '\t{{this}} => `{{@key}}`',
   '{{/each}}',
   '{{#if opinion}}What do you think? Cast your vote by reaction!{{/if}}',
+  '*Hurry!* This poll will close at {{formatTime seconds "seconds"}}',
+].join('\n'), {noEscape: true});
+template.results = Template.compile([
+  'It\'s a {{conclusion}}{{#if winners}} for: **{{#join winners delim="**, and **"}}{{this}}{{/join}}**{{else}}, try again later!{{/if}}',
+  '{{#each votes}}',
+  '\t{{@key}} = `{{this}}`',
+  '{{/each}}',
 ].join('\n'), {noEscape: true});
 template.error = Template.compile([
   'Command: `{{command}}`',
@@ -91,12 +96,22 @@ async function run(ctx, client, message, argv) {
     const choices = voting.buildVoteMap(alternatives);
     actions.push('validated options');
 
+    const seconds = voting.clampDuration(args.duration);
+    poll.seconds = seconds;
+
     const content = `Poll time! ${message.author} has called a vote:\n${template.vote(poll)}`;
     const pollMessage = await message.channel.send(content);
     actions.push('created poll');
 
-    const ballotBox = new voting.BallotBox(ctx, client, pollMessage, message.author, poll, choices);
-    await ballotBox.start(args.duration);
+    const callback = async (result) => {
+      const response = `${message.author}, The results are in for **${subject}**:\n${template.results(result)}`;
+      await chat.respond(message, response);
+    };
+
+    const ballotBox =
+        new voting.BallotBox(ctx, client, pollMessage, message.author, poll, choices, callback);
+
+    await ballotBox.start(seconds);
     actions.push('opened voting');
   } catch (err) {
     const errorDescription = template.error({

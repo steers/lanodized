@@ -2,16 +2,8 @@
 
 const Emoji = require('node-emoji');
 const emojiRegex = require('emoji-regex');
-const chat = require('../lib/chat');
-const Template = require('../lib/template');
 
-const template = {};
-template.results = Template.compile([
-  'It\'s a {{conclusion}}{{#if winners}} for: **{{#join winners delim="**, and **"}}{{this}}{{/join}}**{{else}}, try again later!{{/if}}',
-  '{{#each votes}}',
-  '\t{{@key}} = `{{this}}`',
-  '{{/each}}',
-].join('\n'), {noEscape: true});
+const DEFAULT_POLL_DURATION = 1; // in minutes
 
 /**
  * A BallotBox collects reactions to a message, interpreting them as votes as per the given
@@ -29,14 +21,16 @@ class BallotBox {
    * @param  {string} poll.subject Subject of the poll
    * @param  {Object} poll.alternatives Map of 0 or more options to accepted emoji(s)
    * @param  {Map} choices Map of emoji to vote option
+   * @param  {Function} callback Function called with results on poll conclusion
    */
-  constructor(ctx, client, message, pollster, poll, choices) {
+  constructor(ctx, client, message, pollster, poll, choices, callback) {
     this.db = ctx.db;
     this.client = client;
     this.message = message;
     this.pollster = pollster;
     this.definition = poll;
     this.choices = choices;
+    this.callback = callback;
     this.poll = null;
     this.timer = null;
   }
@@ -59,24 +53,10 @@ class BallotBox {
 
   /**
    * Open the vote for this ballot box for the given duration.
-   * @param  {number} minutes How long the poll should last, in minutes
+   * @param  {number} seconds How long the poll should last, in seconds
    */
-  async start(minutes) {
+  async start(seconds) {
     if (this.poll) return;
-
-    const durations = {
-      minimum: 0.25,
-      default: 5,
-      maximum: 60,
-    };
-    let duration = parseFloat(minutes);
-    if (isNaN(duration)) {
-      duration = defaultDuration;
-    } else if (duration < durations.minimum) {
-      duration = durations.minimum;
-    } else if (duration > durations.maximum) {
-      duration = durations.maximum;
-    }
 
     if (this.choices instanceof Map) {
       for (const emoji of this.choices.keys()) {
@@ -99,7 +79,7 @@ class BallotBox {
       subject: this.definition.subject,
       alternatives: this.definition.alternatives,
       opinion: this.definition.opinion,
-      validTo: new Date(Date.now() + duration * 60000),
+      validTo: new Date(Date.now() + seconds * 1000),
       UserId: user.id,
       ChannelId: channel.id,
     });
@@ -107,8 +87,8 @@ class BallotBox {
 
     const self = this;
     this.timer = setTimeout(async () => {
-      await self.stop(`Poll closed after ${duration} minutes.`);
-    }, duration * 60000);
+      await self.stop(`Poll closed after ${seconds} seconds.`);
+    }, seconds * 1000);
   }
 
   /**
@@ -117,6 +97,7 @@ class BallotBox {
    */
   async stop(reason) {
     if (!this.poll) return;
+
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
@@ -178,12 +159,12 @@ class BallotBox {
       end: reason,
     };
     await this.poll.update({outcome: result});
-
-    const response = `${this.pollster}, The results are in for **${this.definition.subject}**:\n${template.results(result)}`;
-    await this.message.unpin();
-    await chat.respond(this.message, response);
-
     this.poll = null;
+
+    await this.message.unpin();
+    if (this.callback) {
+      await this.callback(result);
+    }
   }
 
   /**
@@ -303,9 +284,10 @@ function buildVoteMap(alternatives) {
     }
   }
   if (voteMap.size === 0) {
+    // Fake a dumb map that thinks it has everything (actually has nothing)
     voteMap = {
       has: () => true,
-      get: (emoji) => emoji,
+      get: (item) => item,
       set: () => {},
       size: 0,
     };
@@ -313,7 +295,22 @@ function buildVoteMap(alternatives) {
   return voteMap;
 }
 
+/**
+ * Clamp a real number of minutes to a permissable range, returning an integer number of seconds.
+ * @param  {number} minutes Duration in minutes
+ * @return {number} Clamped duration in seconds
+ */
+function clampDuration(minutes) {
+  const minimum = 0.25;
+  const maximum = 60;
+  let duration = parseFloat(minutes);
+  if (isNaN(duration)) duration = DEFAULT_POLL_DURATION;
+  return Math.ceil(Math.min(Math.max(minimum, duration), maximum) * 60);
+}
+
 module.exports = {
   BallotBox,
   buildVoteMap,
+  clampDuration,
+  DEFAULT_POLL_DURATION,
 };
