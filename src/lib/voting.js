@@ -7,7 +7,7 @@ const Template = require('../lib/template');
 
 const template = {};
 template.results = Template.compile([
-  'It\'s a {{conclusion}} for: **{{#join winners delim=", "}}{{this}}{{/join}}**',
+  'It\'s a {{conclusion}}{{#if winners}} for: **{{#join winners delim="**, and **"}}{{this}}{{/join}}**{{else}}, try again later!{{/if}}',
   '{{#each votes}}',
   '\t{{@key}} = `{{this}}`',
   '{{/each}}',
@@ -163,7 +163,13 @@ class BallotBox {
         }
       }
     }
-    const conclusion = winners.length === 1 ? 'WIN' : 'TIE';
+    let conclusion = 'WIN';
+    if (winners.length > 1) {
+      conclusion = 'TIE';
+    } else if (winners.length === 0) {
+      conclusion = 'MISS';
+      winners = null;
+    }
     const result = {
       conclusion: conclusion,
       winners: winners,
