@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   DiscordGuild.associate = (models) => {
-    DiscordGuild.hasMany(models.DiscordInteraction, {as: 'Interactions'});
+    DiscordGuild.hasMany(models.DiscordInteraction, {as: 'Interactions', foreignKey: 'GuildId'});
   };
   return DiscordGuild;
 };
