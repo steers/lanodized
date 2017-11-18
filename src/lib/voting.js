@@ -121,6 +121,7 @@ class BallotBox {
       clearTimeout(this.timer);
       this.timer = null;
     }
+    this.client.polls.delete(this.message.id);
 
     const results = await this.db.DiscordUser.findAll({
       attributes: ['snowflake'],
@@ -174,6 +175,7 @@ class BallotBox {
       conclusion: conclusion,
       winners: winners,
       votes: votes,
+      end: reason,
     };
     await this.poll.update({outcome: result});
 
@@ -181,7 +183,6 @@ class BallotBox {
     await this.message.unpin();
     await chat.respond(this.message, response);
 
-    this.client.polls.delete(this.message.id);
     this.poll = null;
   }
 
