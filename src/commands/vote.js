@@ -94,10 +94,14 @@ async function run(ctx, client, message, argv) {
     }
     poll.alternatives = alternatives;
     const choices = voting.buildVoteMap(alternatives);
-    actions.push('validated options');
-
     const seconds = voting.clampDuration(args.duration);
     poll.seconds = seconds;
+    actions.push('validated options');
+
+    const existing = await voting.findOpenUserPolls(ctx, message.author, message.channel);
+    if (existing.length > 0) {
+      throw new Error('Users may only have one poll per channel open at a time');
+    }
 
     const content = `Poll time! ${message.author} has called a vote:\n${template.vote(poll)}`;
     const pollMessage = await message.channel.send(content);

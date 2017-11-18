@@ -308,9 +308,47 @@ function clampDuration(minutes) {
   return Math.ceil(Math.min(Math.max(minimum, duration), maximum) * 60);
 }
 
+/**
+ * Search for open polls created by the given user.
+ * @param  {Object} ctx Application context
+ * @param  {Object} ctx.db Database context
+ * @param  {User} creator User who created the poll(s)
+ * @param  {Channel} createdIn Channel in which the poll was created
+ * @return {Poll[]} Array of Poll entities that are still open.
+ */
+async function findOpenUserPolls(ctx, creator, createdIn = null) {
+  const includes = [{
+    model: ctx.db.DiscordUser,
+    as: 'User',
+    attributes: [],
+    where: {
+      snowflake: creator.id,
+    },
+  }];
+  if (createdIn) {
+    includes.push({
+      model: ctx.db.DiscordChannel,
+      as: 'Channel',
+      attributes: [],
+      where: {
+        snowflake: createdIn.id,
+      },
+    });
+  }
+  return await ctx.db.Poll.findAll({
+    include: includes,
+    where: {
+      validTo: {
+        $gt: new Date(),
+      },
+    },
+  });
+}
+
 module.exports = {
   BallotBox,
   buildVoteMap,
   clampDuration,
+  findOpenUserPolls,
   DEFAULT_POLL_DURATION,
 };
