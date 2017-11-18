@@ -1,6 +1,8 @@
 'use strict';
 
 const Emoji = require('node-emoji');
+const emojiRegex = require('emoji-regex');
+const chat = require('../lib/chat');
 const Template = require('../lib/template');
 
 const template = {};
@@ -26,14 +28,15 @@ class BallotBox {
    * @param  {Object} poll Definition of the poll being created
    * @param  {string} poll.subject Subject of the poll
    * @param  {Object} poll.alternatives Map of 0 or more options to accepted emoji(s)
+   * @param  {Map} choices Map of emoji to vote option
    */
-  constructor(ctx, client, message, pollster, poll) {
+  constructor(ctx, client, message, pollster, poll, choices) {
     this.db = ctx.db;
     this.client = client;
     this.message = message;
     this.pollster = pollster;
     this.definition = poll;
-    this.choices = buildVoteMap(poll.alternatives);
+    this.choices = choices;
     this.poll = null;
     this.timer = null;
   }
@@ -170,7 +173,7 @@ class BallotBox {
 
     const response = `${this.pollster}, The results are in for **${this.definition.subject}**:\n${template.results(result)}`;
     await this.message.unpin();
-    await this.message.reply(response);
+    await chat.respond(this.message, response);
 
     this.client.polls.delete(this.message.id);
     this.poll = null;
@@ -252,6 +255,7 @@ function buildVoteMap(alternatives) {
     throw new Error('Must provide an object mapping 0 or more options to emoji');
   }
   let voteMap = new Map();
+  const regex = emojiRegex();
   for (const alternative of Object.keys(alternatives)) {
     let ballots = alternatives[alternative];
     if (ballots === null || ballots === undefined) {
@@ -263,17 +267,40 @@ function buildVoteMap(alternatives) {
       throw new Error(`One or more ballots required per alternative, none defined for ${alternative}`);
     }
     for (const ballot of ballots) {
-      const emoji = Emoji.find(ballot);
-      if (!emoji) {
-        throw new Error(`Unsupported emoji '${ballot}' defined for alternative ${alternative}`);
+      let emoji;
+      const match = regex.exec(ballot);
+      if (match) {
+        // The emoji ballot was in its unicode form
+        emoji = match[0];
+      } else {
+        // Otherwise check if the emoji is given by name
+        const definition = Emoji.find(ballot);
+        if (definition) {
+          emoji = definition.emoji;
+        } else {
+          const results = Emoji.search(ballot);
+          if (results.length === 0) {
+            // Be a little cheeky if search results turned up nothing 😉
+            results.push(Emoji.random());
+          }
+          const search = results.map((result) => {
+            return `${result.key} (${result.emoji})`;
+          }).join(', or ');
+          throw new Error(`Unsupported emoji '${ballot}' defined for alternative ${alternative}. Did you mean: ${search}?`);
+        }
       }
-      voteMap.set(emoji.emoji, alternative);
+      if (voteMap.has(emoji)) {
+        throw new Error(`Same emoji defined for \`${ballot}\` as \`${voteMap.get(emoji)}\` (${emoji})`);
+      }
+      voteMap.set(emoji, alternative);
     }
   }
   if (voteMap.size === 0) {
     voteMap = {
       has: () => true,
       get: (emoji) => emoji,
+      set: () => {},
+      size: 0,
     };
   }
   return voteMap;
