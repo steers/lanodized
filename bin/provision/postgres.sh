@@ -1,8 +1,21 @@
 #!/bin/sh -e
 
-APP_DB_USER=lanodizer
-APP_DB_PASS=${DB_PASS:-insecure}
-APP_DB_NAME=${DB_NAME:-lanodized_dev}
+if [ ! -d "$PROJECT_DIR" ]
+then
+    echo "Invalid project directory '$PROJECT_DIR'" >&2
+    exit 1
+fi
+
+cd "$PROJECT_DIR"
+if [ ! -f "config/database.json" ]
+then
+    cp "config/database.json.example" "config/database.json"
+fi
+
+NODE_ENV=${NODE_ENV:-development}
+APP_DB_USER=$(jq -r ".${NODE_ENV}.username" config/database.json)
+APP_DB_PASS=$(jq -r ".${NODE_ENV}.password" config/database.json)
+APP_DB_NAME=$(jq -r ".${NODE_ENV}.database" config/database.json)
 
 # Should match the version of PostgreSQL that is installed, optionally specified
 PG_VERSION=${PG_VERSION:-9.6}
@@ -11,27 +24,27 @@ PG_VERSION=${PG_VERSION:-9.6}
 # Changes below this line are probably not necessary
 ###########################################################
 print_db_usage () {
-  echo "Your PostgreSQL ${PG_VERSION} database can be accessed locally using the forwarded port (default: 15432)"
-  echo "  Host: localhost"
-  echo "  Port: 15432"
-  echo "  Database: $APP_DB_NAME"
-  echo "  Username: $APP_DB_USER"
-  echo "  Password: $APP_DB_PASS"
-  echo ""
-  echo "Admin access to postgres user via VM:"
-  echo "  vagrant ssh"
-  echo "  sudo su - postgres"
-  echo ""
-  echo "psql access to app database user via VM:"
-  echo "  vagrant ssh"
-  echo "  sudo su - postgres"
-  echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost $APP_DB_NAME"
-  echo ""
-  echo "Env variable for application development:"
-  echo "  DATABASE_URL=postgresql://$APP_DB_USER:$APP_DB_PASS@localhost:15432/$APP_DB_NAME"
-  echo ""
-  echo "Local command to access the database via psql:"
-  echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost -p 15432 $APP_DB_NAME"
+    echo "Your PostgreSQL ${PG_VERSION} database can be accessed locally using the forwarded port (default: 15432)"
+    echo "  Host: localhost"
+    echo "  Port: 15432"
+    echo "  Database: $APP_DB_NAME"
+    echo "  Username: $APP_DB_USER"
+    echo "  Password: $APP_DB_PASS"
+    echo ""
+    echo "Admin access to postgres user via VM:"
+    echo "  vagrant ssh"
+    echo "  sudo su - postgres"
+    echo ""
+    echo "psql access to app database user via VM:"
+    echo "  vagrant ssh"
+    echo "  sudo su - postgres"
+    echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost $APP_DB_NAME"
+    echo ""
+    echo "Env variable for application development:"
+    echo "  DATABASE_URL=postgresql://$APP_DB_USER:$APP_DB_PASS@localhost:15432/$APP_DB_NAME"
+    echo ""
+    echo "Local command to access the database via psql:"
+    echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost -p 15432 $APP_DB_NAME"
 }
 
 export DEBIAN_FRONTEND=noninteractive
@@ -40,11 +53,11 @@ DISTRO=$(lsb_release -c -s)
 PG_REPO_APT_SOURCE=/etc/apt/sources.list.d/pgdg.list
 if [ ! -f "$PG_REPO_APT_SOURCE" ]
 then
-  # Add PG apt repo:
-  echo "deb http://apt.postgresql.org/pub/repos/apt/ ${DISTRO}-pgdg main" > "$PG_REPO_APT_SOURCE"
+    # Add PG apt repo:
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ ${DISTRO}-pgdg main" > "$PG_REPO_APT_SOURCE"
 
-  # Add PGDG repo key:
-  wget --quiet -O - https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
+    # Add PGDG repo key:
+    wget --quiet -O - https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
 fi
 
 # Update package list and install

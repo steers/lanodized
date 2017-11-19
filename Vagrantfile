@@ -17,16 +17,17 @@ Vagrant.configure("2") do |config|
     vb.cpus = 2
   end
 
+  config.vm.provision "shell", name: "environment",
+    path: "bin/provision/env.sh"
+  config.vm.provision "shell", name: "utilities",
+    path: "bin/provision/utils.sh"
   config.vm.provision "shell", name: "PostgreSQL",
     path: "bin/provision/postgres.sh"
   config.vm.provision "shell", name: "node.js",
     path: "bin/provision/node.sh"
   config.vm.provision "shell", name: "bootstrapping",
     path: "bin/provision/bootstrap.sh",
-    privileged: false,
-    env: {
-      "PROJECT_DIR" => "/opt/lanodized"
-    }
+    privileged: false
   config.vm.provision "shell", name: "startup",
     path: "bin/startup.sh",
     privileged: false,

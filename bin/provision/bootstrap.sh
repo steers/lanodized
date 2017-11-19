@@ -1,7 +1,10 @@
 #!/bin/sh -e
 
-DEFAULT_DIR="/opt/lanodized"
-PROJECT_DIR=${PROJECT_DIR:-$DEFAULT_DIR}
+if [ ! -d "$PROJECT_DIR" ]
+then
+    echo "Invalid project directory '$PROJECT_DIR'" >&2
+    exit 1
+fi
 
 # Install global modules in a way that doesn't require root permissions
 NPM_GLOBAL="${HOME}/.npm-global"
@@ -12,12 +15,6 @@ echo "export PATH=${NPM_GLOBAL}/bin:\$PATH" >> "${HOME}/.profile"
 cd "$PROJECT_DIR"
 npm install
 npm run dev-install
-
-if [ ! -f "${PROJECT_DIR}/config/database.json" ]
-then
-  cp "${PROJECT_DIR}/config/database.json.example" "${PROJECT_DIR}/config/database.json"
-fi
-
 npm run bootstrap
 
 # Set up PM2 to daemonize and monitor the application
