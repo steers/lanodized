@@ -255,7 +255,7 @@ function buildVoteMap(alternatives) {
       ballots = Array.isArray(ballots) ? ballots : [ballots];
     }
     if (ballots.length === 0) {
-      throw new Error(`One or more ballots required per alternative, none defined for ${alternative}`);
+      throw new Error(`One or more emoji required per alternative, none defined for ${alternative}`);
     }
     for (const ballot of ballots) {
       let emoji;
@@ -277,7 +277,7 @@ function buildVoteMap(alternatives) {
         throw new Error(`Unsupported emoji '${ballot}' defined for alternative ${alternative}. Did you mean: ${search}?`);
       }
       if (voteMap.has(emoji)) {
-        throw new Error(`Same emoji defined for \`${ballot}\` as \`${voteMap.get(emoji)}\` (${emoji})`);
+        throw new Error(`Same emoji defined for \`${alternative}\` as \`${voteMap.get(emoji)}\` (${emoji})`);
       }
       voteMap.set(emoji, alternative);
     }
