@@ -212,15 +212,19 @@ class BallotBox {
 
     const ballot = reaction.emoji.name;
     return await this.db.sequelize.transaction(async (t) => {
-      const user = await this.db.DiscordUser.findOne({
-        transaction: t,
-        where: {snowflake: voter.id},
-      });
       const vote = await this.db.PollVote.findOne({
         transaction: t,
+        include: [{
+          model: this.db.DiscordUser,
+          as: 'User',
+          required: true,
+          attributes: [],
+          where: {
+            snowflake: voter.id,
+          },
+        }],
         where: {
           PollId: this.poll.id,
-          UserId: user.id,
           vote: ballot,
           revoked: false,
         },
