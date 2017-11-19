@@ -36,21 +36,24 @@ const configuration = {
 
 const template = {};
 template.vote = Template.compile([
-  '**{{subject}}**',
+  'Poll time! <@{{author.id}}> has called a vote:{{#with poll}}',
+  '{{#if subject}}**{{subject}}**{{/if}}',
   '{{#each alternatives}}',
   '\t{{this}} => `{{@key}}`',
   '{{/each}}',
   '{{#if opinion}}What do you think? Cast your vote by reaction!{{/if}}',
-  '*Hurry!* This poll will close at {{formatTime seconds "seconds"}}',
+  '*Hurry!* This poll will close at {{formatTime seconds "seconds"}}{{/with}}',
 ].join('\n'), {noEscape: true});
 template.results = Template.compile([
+  '<@{{author.id}}>, The results are in for {{#if subject}}**{{subject}}**{{else}}your poll{{/if}}:{{#with result}}',
   'It\'s a {{conclusion}}{{#if winners}} for: **{{#join winners delim="**, and **"}}{{this}}{{/join}}**{{else}}, try again later!{{/if}}',
   '{{#each votes}}',
-  '\t{{@key}} = `{{this}}`',
-  '{{/each}}',
+  '\t{{@key}} => `{{this}}`',
+  '{{/each}}{{/with}}',
 ].join('\n'), {noEscape: true});
 template.error = Template.compile([
-  'Command: `{{command}}`',
+  `<@{{author.id}}>, Sorry, I couldn't create your poll.`,
+  'Command: [ **{{command}}** ]',
   'Error: `{{error}}`',
 ].join('\n'), {noEscape: true});
 
@@ -86,6 +89,12 @@ async function run(ctx, client, message, argv) {
     if (message.channel.type === 'dm') {
       throw new Error(`It's just you and me in here, wouldn't you rather ask more people?`);
     }
+    if (outcomes.length !== (new Set(outcomes)).size) {
+      throw new Error('Each outcome needs to be unique');
+    }
+    if (emojis.length !== (new Set(emojis)).size) {
+      throw new Error('Each emoji needs to be unique');
+    }
     if (outcomes.length !== emojis.length) {
       throw new Error(`Need the same number of outcomes as emoji (${outcomes.length} != ${emojis.length})`);
     }
@@ -107,27 +116,35 @@ async function run(ctx, client, message, argv) {
       throw new Error('Users may only have one poll per channel open at a time');
     }
 
-    const content = `Poll time! ${message.author} has called a vote:\n${template.vote(poll)}`;
+    const content = template.vote({
+      author: message.author,
+      poll: poll,
+    });
     const pollMessage = await message.channel.send(content);
     actions.push('created poll');
 
     const callback = async (result) => {
-      const response = `${message.author}, The results are in for **${subject}**:\n${template.results(result)}`;
+      const response = template.results({
+        author: message.author,
+        subject: subject,
+        result: result,
+      });
       await chat.respond(message, response);
     };
 
-    const ballotBox =
+    const vote =
         new voting.BallotBox(ctx, client, pollMessage, message.author, poll, choices, callback);
 
-    await ballotBox.start(seconds);
+    await vote.start(seconds);
     actions.push('opened voting');
   } catch (err) {
     const errorDescription = template.error({
+      author: message.author,
       command: `${client.config.prefix}${definition.name} ${argv.join(' ')}`,
       error: err.message,
     });
-    const errorMessage = `${message.author}, Sorry, I couldn't create your poll.\n${errorDescription}`;
-    chat.respondDirect(message, errorMessage);
+    chat.respondDirect(message, errorDescription);
+    ctx.log(`@${message.author.username}'s poll in ${message.guild.name} #${message.channel.name} generated an error.`, 'info', err);
     actions.push(`handled ${err.name}`);
   }
 
