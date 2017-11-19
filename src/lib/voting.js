@@ -243,7 +243,6 @@ function buildVoteMap(alternatives) {
     throw new Error('Must provide an object mapping 0 or more options to emoji');
   }
   let voteMap = new Map();
-  const regex = emojiRegex();
   for (const alternative of Object.keys(alternatives)) {
     let ballots = alternatives[alternative];
     if (ballots === null || ballots === undefined) {
@@ -256,26 +255,22 @@ function buildVoteMap(alternatives) {
     }
     for (const ballot of ballots) {
       let emoji;
-      const match = regex.exec(ballot);
-      if (match) {
-        // The emoji ballot was in its unicode form
-        emoji = match[0];
-      } else {
-        // Otherwise check if the emoji is given by name
-        const definition = Emoji.find(ballot);
-        if (definition) {
-          emoji = definition.emoji;
-        } else {
-          const results = Emoji.search(ballot);
-          if (results.length === 0) {
-            // Be a little cheeky if search results turned up nothing 😉
-            results.push(Emoji.random());
-          }
-          const search = results.map((result) => {
-            return `${result.key} (${result.emoji})`;
-          }).join(', or ');
-          throw new Error(`Unsupported emoji '${ballot}' defined for alternative ${alternative}. Did you mean: ${search}?`);
+      // Take the first unicode emoji match per ballot, otherwise look up emoji by name
+      if (emojiRegex().test(ballot)) {
+        [emoji] = emojiRegex().exec(ballot);
+      } else if (Emoji.hasEmoji(ballot)) {
+        emoji = Emoji.get(ballot);
+      }
+      if (!emoji) {
+        const results = Emoji.search(ballot);
+        if (results.length === 0) {
+          // Be a little cheeky if search results turned up nothing 😉
+          results.push(Emoji.random());
         }
+        const search = results.map((result) => {
+          return `${result.key} (${result.emoji})`;
+        }).join(', or ');
+        throw new Error(`Unsupported emoji '${ballot}' defined for alternative ${alternative}. Did you mean: ${search}?`);
       }
       if (voteMap.has(emoji)) {
         throw new Error(`Same emoji defined for \`${ballot}\` as \`${voteMap.get(emoji)}\` (${emoji})`);
@@ -320,6 +315,7 @@ async function findOpenUserPolls(ctx, creator, createdIn = null) {
   const includes = [{
     model: ctx.db.DiscordUser,
     as: 'User',
+    required: true,
     attributes: [],
     where: {
       snowflake: creator.id,
@@ -329,6 +325,7 @@ async function findOpenUserPolls(ctx, creator, createdIn = null) {
     includes.push({
       model: ctx.db.DiscordChannel,
       as: 'Channel',
+      required: true,
       attributes: [],
       where: {
         snowflake: createdIn.id,
