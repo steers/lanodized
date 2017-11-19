@@ -17,35 +17,8 @@ APP_DB_USER=$(jq -r ".${NODE_ENV}.username" config/database.json)
 APP_DB_PASS=$(jq -r ".${NODE_ENV}.password" config/database.json)
 APP_DB_NAME=$(jq -r ".${NODE_ENV}.database" config/database.json)
 
-# Should match the version of PostgreSQL that is installed, optionally specified
 PG_VERSION=${PG_VERSION:-9.6}
-
-###########################################################
-# Changes below this line are probably not necessary
-###########################################################
-print_db_usage () {
-    echo "Your PostgreSQL ${PG_VERSION} database can be accessed locally using the forwarded port (default: 15432)"
-    echo "  Host: localhost"
-    echo "  Port: 15432"
-    echo "  Database: $APP_DB_NAME"
-    echo "  Username: $APP_DB_USER"
-    echo "  Password: $APP_DB_PASS"
-    echo ""
-    echo "Admin access to postgres user via VM:"
-    echo "  vagrant ssh"
-    echo "  sudo su - postgres"
-    echo ""
-    echo "psql access to app database user via VM:"
-    echo "  vagrant ssh"
-    echo "  sudo su - postgres"
-    echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost $APP_DB_NAME"
-    echo ""
-    echo "Env variable for application development:"
-    echo "  DATABASE_URL=postgresql://$APP_DB_USER:$APP_DB_PASS@localhost:15432/$APP_DB_NAME"
-    echo ""
-    echo "Local command to access the database via psql:"
-    echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost -p 15432 $APP_DB_NAME"
-}
+echo "export PG_VERSION=$PG_VERSION" > /etc/profile.d/pg_version.sh
 
 export DEBIAN_FRONTEND=noninteractive
 DISTRO=$(lsb_release -c -s)
@@ -91,5 +64,3 @@ CREATE DATABASE $APP_DB_NAME WITH OWNER=$APP_DB_USER
                                   ENCODING='UTF8'
                                   TEMPLATE=template0;
 EOF
-
-print_db_usage

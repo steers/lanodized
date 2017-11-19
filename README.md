@@ -1,22 +1,33 @@
-# lanodized
+```
+    __    ___    _   __          ___                __
+   / /   /   |  / | / /___  ____/ (_)___  ___  ____/ /
+  / /   / /| | /  |/ / __ \/ __  / /_  / / _ \/ __  / 
+ / /___/ ___ |/ /|  / /_/ / /_/ / / / /_/  __/ /_/ /  
+/_____/_/  |_/_/ |_/\____/\__,_/_/ /___/\___/\__,_/   
+                                                      
+```
+
+# LANodized
 A Discord chat bot created to help manage LAN parties.
 
 ## Quick Start
-Using [Vagrant](https://www.vagrantup.com/downloads.html) with [VirtualBox](https://www.virtualbox.org/wiki/Downloads) is the easiest way to run `lanodized` locally, for development and testing purposes. Once installed on your machine, run `vagrant up` from the root of this project to create your environment.
+Using [Vagrant](https://www.vagrantup.com/downloads.html) with [VirtualBox](https://www.virtualbox.org/wiki/Downloads) is the easiest way to run `lanodized` locally, for development and testing purposes. Install both on your machine.
 
 Before you launch the bot, [register a Discord App](https://discordapp.com/developers/applications/me) and add a Bot User to get your API token, which you should put in the chat config file.
 
 ```bash
 cp config/chat.json.example config/chat.json
+editor config/chat.json
 ```
 
-Double-check that all your database config settings are correct, and start the contraption.
+If you already have a PostgreSQL database set up that you would like to use, make sure to add the appropriate details to the database config file.
 
 ```bash
-vagrant ssh
-cd /opt/lanodized
-npm start
+cp config/database.json.example config/database.json
+editor config/database.json
 ```
+
+With everything installed and configured, run `vagrant up` from the somewhere in this project structure to create your VM and start the bot.
 
 ### Connecting to your Discord server
 Once you've got the bot running, add it to your Discord guild using the Client ID on the page for your Discord App. Until the full OAuth2 flow is implemented, this will have to do.
