@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev-install": "npm install --only=dev && .hooks/link-hooks",
-    "bootstrap": "cd node_modules/.. && sequelize db:migrate && sequelize db:seed:all",
+    "bootstrap": "sequelize db:migrate && sequelize db:seed:all",
+    "migrate": "sequelize db:migrate",
     "test": "mocha $(find src -type f -name '*.test.js')",
     "lint": "eslint $(find src -type f -name '*.js')",
     "lint-staged": "git diff --staged --diff-filter=AM --name-only | grep .js$ | xargs -r eslint"
@@ -36,8 +37,8 @@
     "moment-timezone": "^0.5.14",
     "node-emoji": "^1.8.1",
     "pg": "^6.4.2",
-    "sequelize": "^4.22.7",
-    "sequelize-cli": "^3.0.0"
+    "sequelize": "^4.22.8",
+    "sequelize-cli": "^3.1.0"
   },
   "optionalDependencies": {
     "bufferutil": "^3.0.2"

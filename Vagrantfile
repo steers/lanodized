@@ -5,6 +5,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "lanodized"
   config.vm.box = "ubuntu/xenial64"
+  config.vm.hostname = "lanodized"
 
   # PostgreSQL
   config.vm.network "forwarded_port", guest: 5432, host: 15432, host_ip: "127.0.0.1"
@@ -16,6 +17,8 @@ Vagrant.configure("2") do |config|
     vb.memory = "1024"
     vb.cpus = 2
   end
+
+  config.vm.provision "file", source: "bin/aliases.sh", destination: ".bash_aliases"
 
   config.vm.provision "shell", name: "environment",
     path: "bin/provision/env.sh"

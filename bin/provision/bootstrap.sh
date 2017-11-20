@@ -17,8 +17,11 @@ npm install
 npm run dev-install
 npm run bootstrap
 
-# Set up PM2 to daemonize and monitor the application
+# Install some sweet node command-line tools
 npm install -g pm2
+pm2 completion install
+
+# Set up PM2 to daemonize and monitor the application
 pm2 install pm2-logrotate
 
 if ! pm2 start app.json

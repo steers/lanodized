@@ -1,6 +1,6 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
-(
-    echo 'export PROJECT_DIR=/opt/lanodized'
-    echo 'export NODE_ENV=development'
-) > /etc/profile.d/lanodized.sh
+cat << EOF > /etc/profile.d/lanodized.sh
+export PROJECT_DIR=/opt/lanodized
+export NODE_ENV=development
+EOF

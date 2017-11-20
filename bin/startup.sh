@@ -5,6 +5,8 @@ cd "$PROJECT_DIR"
 LOGO="data/logo.txt"
 [[ -f "$LOGO" ]] && cat "$LOGO"
 
+npm run migrate
+
 NODE_ENV=${NODE_ENV:-development}
 APP_DB_USER=$(jq -r ".${NODE_ENV}.username" config/database.json)
 APP_DB_PASS=$(jq -r ".${NODE_ENV}.password" config/database.json)
