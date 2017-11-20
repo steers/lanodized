@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     DiscordUser.hasMany(models.DiscordInteraction, {as: 'Interactions', foreignKey: 'UserId'});
     DiscordUser.hasMany(models.PollVote, {as: 'Votes', foreignKey: 'UserId'});
     DiscordUser.hasMany(models.Poll, {foreignKey: 'UserId'});
+    DiscordUser.hasMany(models.Notification, {foreignKey: 'CreatorId'});
   };
   return DiscordUser;
 };
