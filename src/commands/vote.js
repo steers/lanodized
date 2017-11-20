@@ -1,6 +1,6 @@
 'use strict';
 
-const {parseArgs} = require('../lib/parser');
+const {parseArgs, arrayify} = require('../lib/parser');
 const chat = require('../lib/chat');
 const voting = require('../lib/voting');
 const Template = require('../lib/template');
@@ -69,15 +69,8 @@ async function run(ctx, client, message, argv) {
   const args = parseArgs(argv, definition.options);
   const subject = args._.join(' ');
   delete args._;
-
-  let outcomes = [];
-  if (args.outcome) {
-    outcomes = Array.isArray(args.outcome) ? args.outcome : [args.outcome];
-  }
-  let emojis = [];
-  if (args.emoji) {
-    emojis = Array.isArray(args.emoji) ? args.emoji : [args.emoji];
-  }
+  const outcomes = arrayify(args.outcome);
+  const emojis = arrayify(args.emoji);
 
   const poll = {
     subject: subject,

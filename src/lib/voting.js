@@ -1,5 +1,6 @@
 'use strict';
 
+const {arrayify} = require('./parser');
 const Emoji = require('node-emoji');
 const emojiRegex = require('emoji-regex');
 
@@ -248,12 +249,7 @@ function buildVoteMap(alternatives) {
   }
   let voteMap = new Map();
   for (const alternative of Object.keys(alternatives)) {
-    let ballots = alternatives[alternative];
-    if (ballots === null || ballots === undefined) {
-      ballots = [];
-    } else {
-      ballots = Array.isArray(ballots) ? ballots : [ballots];
-    }
+    const ballots = arrayify(alternatives[alternative]);
     if (ballots.length === 0) {
       throw new Error(`One or more emoji required per alternative, none defined for ${alternative}`);
     }

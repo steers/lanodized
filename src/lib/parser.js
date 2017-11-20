@@ -59,12 +59,7 @@ function parseArgs(argv, options) {
         break;
       }
     }
-    const aliases = ((list) => {
-      if (list === null || list === undefined) {
-        return [];
-      }
-      return Array.isArray(list) ? list : [list];
-    })(props.alias);
+    const aliases = arrayify(props.alias);
     if (aliases.length > 0) {
       parserOptions.alias[key] = aliases;
     }
@@ -75,7 +70,22 @@ function parseArgs(argv, options) {
   return parse(argv, parserOptions);
 }
 
+/**
+ * Transform the given input into an array, if it isn't already.
+ * @param  {*} list Array or single value
+ * @return {Array} An empty array if the input was undefined or null,
+ *                    or the given input if it was an array,
+ *                    or an array containing the given element.
+ */
+function arrayify(list) {
+  if (list === null || list === undefined) {
+    return [];
+  }
+  return Array.isArray(list) ? list : [list];
+}
+
 module.exports = {
-  tokenize: tokenize,
-  parseArgs: parseArgs,
+  tokenize,
+  parseArgs,
+  arrayify,
 };
