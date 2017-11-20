@@ -29,4 +29,5 @@ then
     echo "There was a problem starting the application, please consult the logs." >&2
     pm2 logs --nostream >&2
 fi
+pm2 save
 pm2 startup | grep '^sudo .*pm2 startup' | sh -
