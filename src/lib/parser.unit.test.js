@@ -128,4 +128,43 @@ describe('Parser library', () => {
       args.except.should.not.equal(options.except.default);
     });
   });
+
+  describe('arrayify', () => {
+    it('should return an empty array when given no arguments', () => {
+      const result = parser.arrayify();
+      should.exist(result);
+      result.should.be.an.Array();
+      result.should.be.empty();
+    });
+
+    it('should return an empty array when given undefined', () => {
+      const result = parser.arrayify(undefined);
+      should.exist(result);
+      result.should.be.an.Array();
+      result.should.be.empty();
+    });
+
+    it('should return an empty array when given null', () => {
+      const result = parser.arrayify(null);
+      should.exist(result);
+      result.should.be.an.Array();
+      result.should.be.empty();
+    });
+
+    it('should return an array with one element given a single value', () => {
+      const result = parser.arrayify('foo');
+      should.exist(result);
+      result.should.be.an.Array();
+      result.length.should.equal(1);
+      result.should.containEql('foo');
+    });
+
+    it('should return the provided array as given', () => {
+      const input = ['blinky', 'pinky', 'inky', 'clyde'];
+      const result = parser.arrayify(input);
+      should.exist(result);
+      result.should.be.an.Array();
+      result.should.be.exactly(input);
+    });
+  });
 });
