@@ -1,5 +1,7 @@
 'use strict';
 
+const {arrayify} = require('./parser');
+
 /**
  * Add a notification for each trigger to the given group of targets.
  * @param {Object} ctx Application context
@@ -49,9 +51,9 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
     requestedTriggers.delete(trigger.name);
 
     const adding = {
-      channels: new Set(channels),
-      roles: new Set(roles),
-      users: new Set(users),
+      channel: new Set(channels),
+      role: new Set(roles),
+      user: new Set(users),
     };
 
     await ctx.db.sequelize.transaction(async (t) => {
@@ -94,6 +96,7 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
             GuildId: guild.id,
             CreatorId: creator.id,
             target: newTarget,
+            enabled: true,
           }, {
             transaction: t,
           });
@@ -108,6 +111,27 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
   }
 }
 
+/**
+ * Ensure all provided triggers exist in the database.
+ * @param  {Object} ctx Application context
+ * @param  {Array<string>} triggers Known triggers
+ */
+async function syncTriggers(ctx, triggers) {
+  const uniqueTriggers = new Set(arrayify(triggers));
+  if (uniqueTriggers.size === 0) return;
+
+  await ctx.db.sequelize.transaction(async (t) => {
+    for (const trigger of uniqueTriggers) {
+      await ctx.db.Trigger.findOrCreate({
+        transaction: t,
+        where: {name: trigger},
+        defaults: {name: trigger},
+      });
+    }
+  });
+}
+
 module.exports = {
   addNotifications,
+  syncTriggers,
 };

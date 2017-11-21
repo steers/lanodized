@@ -27,7 +27,7 @@ const definition = {
     role: {
       type: 'string',
       alias: 'r',
-      description: 'target role to notify (must be notifiable)',
+      description: 'target role to notify (must be mentionable)',
     },
     user: {
       type: 'string',
