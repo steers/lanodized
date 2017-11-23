@@ -133,7 +133,7 @@ async function run(ctx, client, message, argv) {
   } catch (err) {
     const errorDescription = template.error({
       author: message.author,
-      command: `${client.config.prefix}${definition.name} ${argv.join(' ')}`,
+      command: message.content.trim(),
       error: err.message,
     });
     chat.respondDirect(message, errorDescription);
