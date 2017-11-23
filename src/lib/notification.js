@@ -176,7 +176,7 @@ async function notify(ctx, client, trigger, content) {
     } else if (target.hasOwnProperty('everyone')) {
       // TODO: What channel do we post in? Is there a configured channel for announcements?
     } else {
-      ctx.log(`Notification ${notification.id} contains no known targets: ${JSON.stringify(notification.target)}`, 'error');
+      ctx.log(`Notification ${notification.id} contains no known targets`, 'error');
     }
   }
   return sent;

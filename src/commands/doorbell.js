@@ -5,7 +5,7 @@ const chat = require('../lib/chat');
 const notification = require('../lib/notification');
 const Help = require('../lib/help');
 const Template = require('../lib/template');
-
+const Emoji = require('node-emoji');
 
 const definition = {
   name: 'doorbell',
@@ -39,6 +39,7 @@ template.notify = Template.compile([
   'Ding Dong! 🛎🎶',
   '{{user}} is waiting at the door for you to let them in!',
   'They rang the doorbell at {{formatTime now}}',
+  'Before you take off, leave a reaction to let others know you\'ve got it.',
 ].join('\n'), {noEscape: true});
 template.ack = Template.compile([
   '{{responder}} has gone to let {{user}} in, after {{minutes}} minutes',
@@ -59,9 +60,9 @@ async function run(ctx, client, message, argv) {
   const args = parseArgs(argv, definition.options);
   if (args.help) {
     const content = Help.usage(definition, {prefix: client.config.prefix, detailed: true});
-    const actions = await chat.respondDirect(message, content);
+    await chat.respondDirect(message, content);
     return {
-      actions: actions,
+      actions: ['provided help'],
     };
   }
 
@@ -70,6 +71,7 @@ async function run(ctx, client, message, argv) {
     if (!guild) {
       throw new Error('Must ring the doorbell from a Guild text channel');
     }
+    // TODO: only allow if there's an event active for this guild!
   } catch (err) {
     const errorDescription = template.error({
       author: message.author,
@@ -108,6 +110,7 @@ async function run(ctx, client, message, argv) {
     return !user.bot && !acknowledgement;
   };
   for (const sent of triggered) {
+    await sent.react(Emoji.get(':door:'));
     handlers.set(sent.id, sent.createReactionCollector(reactFilter, {time: 300000}));
   }
   const reactHandle = async (reaction) => {
