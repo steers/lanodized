@@ -19,7 +19,12 @@ module.exports = async (ctx, client, message) => {
   const interaction = await Interaction.record(ctx, message, command, alias);
   const result = {};
   try {
-    Object.assign(result, await command.run(ctx, client, message, argv));
+    let output = await command.run(ctx, client, message, argv) || {};
+    if (typeof output === 'object' && !Array.isArray(output)) {
+      Object.assign(result, JSON.parse(JSON.stringify(output)));
+    } else {
+      result.output = output;
+    }
   } catch (err) {
     ctx.log(`Encountered an error while running ${command.help.name}.`, 'error', err);
     result.error = err.toString().slice(0, 256);
