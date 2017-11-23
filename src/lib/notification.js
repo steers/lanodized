@@ -121,7 +121,7 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
  * @param  {Client} client Chat client object
  * @param  {string} trigger Trigger name
  * @param  {string} content Notification text
- * @return {Array} First element is map of arrays of notified entities, second is misses (if any)
+ * @return {Array<Message>} Messages sent as a result of resolving triggered notifications
  */
 async function notify(ctx, client, trigger, content) {
   const notifications = await ctx.db.Notification.findAll({
@@ -144,16 +144,7 @@ async function notify(ctx, client, trigger, content) {
     },
   });
 
-  const notified = {
-    channels: [],
-    users: [],
-    roles: [],
-  };
-  const missed = {
-    channels: [],
-    users: [],
-    roles: [],
-  };
+  const sent = [];
   for (const notification of notifications) {
     const target = notification.target || {};
     const guildName = notification.Guild.name;
@@ -162,44 +153,33 @@ async function notify(ctx, client, trigger, content) {
       if (guild) {
         const channel = guild.channels.get(target.channel);
         if (channel) {
-          await channel.send(`@here, ${content}`);
-          notified.channels.push(channel.id);
+          sent.push(await channel.send(`@here, ${content}`));
         } else {
           ctx.log(`Attempted to notify <#${target.channel}>, but it didn't exist in guild ${guildName}`, 'error');
-          missed.channels.push(target.channel);
         }
       } else {
         ctx.log(`Attempted to notify <#${target.channel}>, but I couldn't find guild ${guildName}`, 'error');
-        missed.channels.push(target.channel);
       }
     } else if (target.hasOwnProperty('user')) {
       if (guild) {
         const member = guild.members.get(target.user);
         if (member) {
-          await member.send(content);
-          notified.users.push(member.id);
+          sent.push(await member.send(content));
         } else {
           ctx.log(`Attempted to notify <@${target.user}>, but they weren't a member of guild ${guildName}`, 'error');
-          missed.users.push(target.user);
         }
       } else {
         ctx.log(`Attempted to notify <#${target.channel}>, but I couldn't find guild ${guildName}`, 'error');
-        missed.users.push(target.user);
       }
     } else if (target.hasOwnProperty('role')) {
       // TODO: What channel do we post in? Is there a configured channel for announcements?
-      missed.roles.push(target.role);
     } else if (target.hasOwnProperty('everyone')) {
       // TODO: What channel do we post in? Is there a configured channel for announcements?
     } else {
       ctx.log(`Notification ${notification.id} contains no known targets: ${JSON.stringify(notification.target)}`, 'error');
     }
   }
-  const results = [notified];
-  if (missed.channels.length > 0 || missed.users.length > 0 || missed.roles.length > 0) {
-    results.push(missed);
-  }
-  return results;
+  return sent;
 }
 
 /**
