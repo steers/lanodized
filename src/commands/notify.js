@@ -41,6 +41,7 @@ const definition = {
 
 const configuration = {
   enabled: true,
+  guild: true,
   privileged: true,
 };
 
@@ -83,7 +84,7 @@ async function run(ctx, client, message, argv) {
     });
     await chat.respondDirect(message, errorDescription);
     return {
-      error: err.toString(),
+      error: err.toString().slice(0, 255),
     };
   }
 
