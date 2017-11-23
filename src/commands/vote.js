@@ -76,6 +76,7 @@ async function run(ctx, client, message, argv) {
     subject: subject,
     opinion: outcomes.length === 0,
   };
+  const result = {};
   const actions = [];
   try {
     // Some commands make sense in a DM with the bot, but voting is not one of them
@@ -136,15 +137,13 @@ async function run(ctx, client, message, argv) {
       command: message.content.trim(),
       error: err.message,
     });
-    chat.respondDirect(message, errorDescription);
     ctx.log(`@${message.author.username}'s poll in ${message.guild.name} #${message.channel.name} generated an error.`, 'info', err);
-    actions.push(`handled ${err.name}`);
+    await chat.respondDirect(message, errorDescription);
+    result.error = err.toString().slice(0, 255);
   }
-
-  return {
-    poll: poll,
-    actions: actions,
-  };
+  result.poll = poll;
+  result.actions = actions;
+  return result;
 }
 
 module.exports = {

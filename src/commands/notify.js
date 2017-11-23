@@ -193,9 +193,9 @@ async function run(ctx, client, message, argv) {
       command: message.content.trim(),
       error: err.message,
     });
-    chat.respondDirect(message, errorDescription);
     ctx.log(`@${message.author.username} configuring notifications in ${message.guild.name} #${message.channel.name} generated an error.`, 'info', err);
-    result.error = err.toString();
+    await chat.respondDirect(message, errorDescription);
+    result.error = err.toString().slice(0, 255);
   }
   result.actions = actions;
   return result;

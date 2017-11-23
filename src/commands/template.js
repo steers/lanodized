@@ -79,8 +79,8 @@ async function run(ctx, client, message, argv) {
       actions.push(...await chat.reply(message, content));
     }
   } catch (err) {
-    result.error = err.toString().slice(0, 256);
     ctx.log(`Encountered an error running ${definition.name}`, 'error', err);
+    result.error = err.toString().slice(0, 255);
   }
   result.actions = actions;
   return result;
