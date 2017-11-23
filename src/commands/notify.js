@@ -1,7 +1,9 @@
 'use strict';
 
 const {parseArgs, arrayify} = require('../lib/parser');
+const chat = require('../lib/chat');
 const notification = require('../lib/notification');
+const Template = require('../lib/template');
 
 const definition = {
   name: 'notify',
@@ -38,9 +40,16 @@ const definition = {
 };
 
 const configuration = {
-  enabled: false,
+  enabled: true,
   privileged: true,
 };
+
+const template = {};
+template.error = Template.compile([
+  `<@{{author.id}}>, Sorry, I couldn't configure your notifications.`,
+  'Command: [ **{{command}}** ]',
+  'Error: `{{error}}`',
+].join('\n'), {noEscape: true});
 
 /**
  * Execute the notify command in response to an incoming chat message.
@@ -57,12 +66,26 @@ async function run(ctx, client, message, argv) {
   const users = arrayify(args.user);
   let triggers = args._;
 
-  if (!message.channel.guild) {
-    throw new Error('Must configure notifications from a Guild text channel');
-  }
   const guild = message.channel.guild;
-
-  // TODO: does the user have permissions to modify notifications?
+  try {
+    if (!guild) {
+      throw new Error('Must configure notifications from a Guild text channel');
+    }
+    const author = guild.members.get(message.author.id);
+    if (!author.hasPermission('ADMINISTRATOR')) {
+      throw new Error('Only administrators can configure notifications.');
+    }
+  } catch (err) {
+    const errorDescription = template.error({
+      author: message.author,
+      command: message.content.trim(),
+      error: err.message,
+    });
+    await chat.respondDirect(message, errorDescription);
+    return {
+      error: err.toString(),
+    };
+  }
 
   // Notifiable entities uniquely identified by snowflake (besides @everyone)
   const notifiable = {
@@ -163,9 +186,16 @@ async function run(ctx, client, message, argv) {
   const actions = [];
   try {
     await notification.addNotifications(ctx, guild.id, message.author.id, triggers, notifiable);
+    actions.push('added notifications');
   } catch (err) {
-    // TODO: proper responses
-    ctx.log(err);
+    const errorDescription = template.error({
+      author: message.author,
+      command: message.content.trim(),
+      error: err.message,
+    });
+    chat.respondDirect(message, errorDescription);
+    ctx.log(`@${message.author.username} configuring notifications in ${message.guild.name} #${message.channel.name} generated an error.`, 'info', err);
+    result.error = err.toString();
   }
   result.actions = actions;
   return result;
