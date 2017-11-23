@@ -37,15 +37,12 @@ async function respondDirect(message, content) {
   switch (message.channel.type) {
     case 'dm':
     case 'group': {
-      await message.channel.send(content);
-      actions.push('responded directly');
+      actions.push(...await respond(message, content));
       break;
     }
     default: {
-      const channel = await message.author.createDM();
-      await channel.send(content);
+      await message.author.send(content);
       actions.push('responded directly');
-      await channel.delete();
       if (message.deletable) {
         await message.delete();
         actions.push('deleted message');
