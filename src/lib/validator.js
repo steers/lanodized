@@ -2,6 +2,71 @@
 
 const {arrayify} = require('./parser');
 const moment = require('moment-timezone');
+const validate = require('validate.js');
+
+const DEFAULT_TZ = process.env.DEFAULT_TZ || 'America/Toronto';
+
+// Add custom validators
+
+validate.validators.containedBy = (value, options) => {
+  const superset = new Set(arrayify(options));
+  let values = arrayify(value);
+  if (validate.isObject(value) && !validate.isArray(value)) {
+    values = Object.keys(value);
+  }
+  if (!values.every((item) => superset.has(item))) {
+    return `must contain only valid options: ${Array.from(superset).join(', ')}`;
+  }
+};
+validate.validators.array = (value, options) => {
+  if (validate.isEmpty(value)) return;
+  if (!validate.isArray(value)) {
+    return 'must be an array';
+  }
+
+  const failures = [];
+  for (const item of value) {
+    const invalid = validate.isObject(item)
+      ? validate(item, options)
+      : validate.single(item, options);
+    if (invalid) {
+      failures.push(...arrayify(invalid));
+    }
+  };
+  if (failures.length > 0) {
+    return failures;
+  }
+};
+validate.validators.eachProperty = (value, options) => {
+  if (validate.isEmpty(value)) return;
+  if (!validate.isObject(value) || validate.isArray(value)) {
+    return 'must be an object';
+  }
+
+  const failures = [];
+  for (const property of Object.keys(value)) {
+    const invalid = validate.isObject(value[property])
+      ? validate(value[property], options)
+      : validate.single(value[property], options);
+    if (invalid) {
+      failures.push(...arrayify(invalid));
+    }
+  }
+  if (failures.length > 0) {
+    return failures;
+  }
+};
+validate.extend(validate.validators.datetime, {
+  // The value is guaranteed not to be null or undefined but otherwise it could be anything.
+  parse: function(value, options) {
+    return moment(value).tz(DEFAULT_TZ);
+  },
+  // Input is a unix timestamp (in milliseconds)
+  format: function(value, options) {
+    const format = options.dateOnly ? 'YYYY-MM-DD' : moment.ISO_8601;
+    return moment(value).tz(DEFAULT_TZ).format(format);
+  },
+});
 
 /**
  * Representation of a validation failure.
@@ -27,70 +92,11 @@ class DataFileValidator {
    * Create a new DataFileValidator
    * @param  {String} tz Time zone used to convert all scanned timestamps.
    */
-  constructor(tz = 'America/Toronto') {
+  constructor() {
     this.genres = [];
     this.platforms = [];
     this.eventTypes = [];
-
-    this.validate = require('validate.js');
-    this.validate.validators.containedBy = (value, options) => {
-      const superset = new Set(arrayify(options));
-      let values = arrayify(value);
-      if (this.validate.isObject(value) && !this.validate.isArray(value)) {
-        values = Object.keys(value);
-      }
-      if (!values.every((item) => superset.has(item))) {
-        return `must contain only valid options: ${Array.from(superset).join(', ')}`;
-      }
-    };
-    this.validate.validators.array = (value, options) => {
-      if (!this.validate.isArray(value)) {
-        return 'must be an array';
-      }
-
-      const failures = [];
-      for (const item of value) {
-        const invalid = this.validate.isObject(item)
-          ? this.validate(item, options)
-          : this.validate.single(item, options);
-        if (invalid) {
-          failures.push(...arrayify(invalid));
-        }
-      };
-      if (failures.length > 0) {
-        return failures;
-      }
-    };
-    this.validate.validators.eachProperty = (value, options) => {
-      if (!this.validate.isEmpty()) return;
-      if (!this.validate.isObject(value) || this.validate.isArray(value)) {
-        return 'must be an object';
-      }
-
-      const failures = [];
-      for (const property of Object.keys(value)) {
-        const invalid = this.validate.isObject(value[property])
-          ? this.validate(value[property], options)
-          : this.validate.single(value[property], options);
-        if (invalid) {
-          failures.push(...arrayify(invalid));
-        }
-      }
-      if (failures.length > 0) {
-        return failures;
-      }
-    };
-    this.validate.extend(this.validate.validators.datetime, {
-      // The value is guaranteed not to be null or undefined but otherwise it could be anything.
-      parse: function(value, options) {
-        return moment(value).tz(tz);
-      },
-      // Input is a unix timestamp (in milliseconds)
-      format: function(value, options) {
-        const format = options.dateOnly ? 'YYYY-MM-DD' : moment.ISO_8601;
-        return moment(value).tz(tz).format(format);
-      },
-    });
+    this.validate = validate;
   }
 
   /**
