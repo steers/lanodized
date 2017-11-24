@@ -5,6 +5,7 @@ const Bot = require('./chat').Bot;
 const data = require('./lib/data');
 const Validator = require('./lib/validator').DataFileValidator;
 const games = require('./lib/games');
+const schedule = require('./lib/schedule');
 
 // Directory is relative to the project root
 const DATA_DIR = process.env.DATA_DIR || './data';
@@ -38,6 +39,18 @@ async function load(ctx) {
     for (const definition of gameDefinitions) {
       if (await data.hasChanged(ctx, definition)) {
         await games.upsertGame(ctx, definition.parsed);
+        await data.fileChange(ctx, definition);
+      }
+    }
+  }
+  if (modules.hasOwnProperty('events')) {
+    const partyFiles = await data.readFiles(modules.events);
+    const validate = (defn) => validator.validateParty(defn);
+    const partyDefinitions = data.validateFiles(ctx, partyFiles, validate);
+    for (const definition of partyDefinitions) {
+      if (await data.hasChanged(ctx, definition)) {
+        await schedule.upsertParty(ctx, definition.parsed);
+        await data.fileChange(ctx, definition);
       }
     }
   }

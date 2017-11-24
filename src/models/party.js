@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     iteration: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      validate: {min: 1, max: undefined},
+      validate: {min: 1},
     },
     start: {
       type: DataTypes.DATE,

@@ -43,41 +43,43 @@ function _parseFile(file) {
 }
 
 /**
- * Compare the given file with the data file records to determine whether the file
- * has changed since it was last checked. If it's new, or has changed, update the record.
+ * Update the recorded digest for the given file, or create a new record if none existed.
  * @param  {Object}  ctx Application context
  * @param  {Object}  file File to check
  * @param  {string}  file.name Name of the file (without extension)
  * @param  {Buffer}  file.digest File digest (MD5)
- * @return {Boolean} True if the file has changed, or is new
+ * @return {DataFile} Entity created or updated
+ */
+async function fileChange(ctx, file) {
+  return await ctx.db.DataFile.upsert({
+    name: file.name,
+    digest: file.digest,
+  });
+}
+
+/**
+ * Compare the given file with the data file records to determine whether the file
+ * has changed since it was last processed.
+ * @param  {Object}  ctx Application context
+ * @param  {Object}  file File to check
+ * @param  {string}  file.name Name of the file (without extension)
+ * @param  {Buffer}  file.digest File digest (MD5)
+ * @return {Boolean} True if the file digest has changed, or is new
  */
 async function hasChanged(ctx, file) {
-  return await ctx.db.sequelize.transaction(async (t) => {
-    const record = await ctx.db.DataFile.findOne({
-      transaction: t,
-      attributes: ['name', 'digest'],
-      where: {
-        name: file.name,
-      },
-    });
-    if (record) {
-      const lastHash = new Buffer(record.digest).toString('hex');
-      const thisHash = new Buffer(file.digest).toString('hex');
-      if (thisHash !== lastHash) {
-        await record.update({digest: file.digest}, {transaction: t});
-        return true;
-      }
-    } else {
-      await ctx.db.DataFile.create({
-        name: file.name,
-        digest: file.digest,
-      }, {
-        transaction: t,
-      });
-      return true;
-    }
-    return false;
+  const record = await ctx.db.DataFile.findOne({
+    attributes: ['name', 'digest'],
+    where: {
+      name: file.name,
+    },
   });
+  if (record) {
+    const lastHash = new Buffer(record.digest).toString('hex');
+    const thisHash = new Buffer(file.digest).toString('hex');
+    return thisHash !== lastHash;
+  } else {
+    return true;
+  }
 }
 
 /**
@@ -154,6 +156,7 @@ function validateFiles(ctx, files, validate) {
 }
 
 module.exports = {
+  fileChange,
   hasChanged,
   readFilenames,
   readFiles,

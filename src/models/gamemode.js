@@ -6,7 +6,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     short: {
-      primaryKey: true,
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -27,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   GameMode.associate = (models) => {
     GameMode.belongsTo(models.Game);
+    GameMode.belongsToMany(models.Event, {through: models.EventGameMode});
   };
   return GameMode;
 };
