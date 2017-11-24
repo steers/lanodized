@@ -16,11 +16,68 @@ const DEFAULT_DATA_DIR = '../../data';
  * @param  {string} filename Data file name (absolute or relative)
  * @return {Boolean} Whether the file is a JDON data file.
  */
-async function isDataFile(filename) {
+async function _isDataFile(filename) {
   const fileStat = await stat(filename);
   return (filename.indexOf('.') !== 0)
       && (filename.slice(-5) === '.json')
       && (fileStat.isFile());
+}
+
+/**
+ * Parse a given file's contents according to its type.
+ * @param  {Object} file File to parse
+ * @param  {string} file.type File type
+ * @param  {Buffer} file.contents File contents
+ * @return {[type]}      [description]
+ */
+function _parseFile(file) {
+  switch (file.type) {
+    case 'JSON': {
+      return JSON.parse(file.contents);
+      break;
+    }
+    default: {
+      throw new Error(`File '${file.name}' had unsupported extension '${file.type}'`);
+    }
+  }
+}
+
+/**
+ * Compare the given file with the data file records to determine whether the file
+ * has changed since it was last checked. If it's new, or has changed, update the record.
+ * @param  {Object}  ctx Application context
+ * @param  {Object}  file File to check
+ * @param  {string}  file.name Name of the file (without extension)
+ * @param  {Buffer}  file.digest File digest (MD5)
+ * @return {Boolean} True if the file has changed, or is new
+ */
+async function hasChanged(ctx, file) {
+  return await ctx.db.sequelize.transaction(async (t) => {
+    const record = await ctx.db.DataFile.findOne({
+      transaction: t,
+      attributes: ['name', 'digest'],
+      where: {
+        name: file.name,
+      },
+    });
+    if (record) {
+      const lastHash = new Buffer(record.digest).toString('hex');
+      const thisHash = new Buffer(file.digest).toString('hex');
+      if (thisHash !== lastHash) {
+        await record.update({digest: file.digest}, {transaction: t});
+        return true;
+      }
+    } else {
+      await ctx.db.DataFile.create({
+        name: file.name,
+        digest: file.digest,
+      }, {
+        transaction: t,
+      });
+      return true;
+    }
+    return false;
+  });
 }
 
 /**
@@ -39,10 +96,10 @@ async function readFilenames(baseDir = DEFAULT_DATA_DIR) {
       const moduleContents = await readdir(modulePath);
       const moduleFiles = await Promise.all(moduleContents.map(async (moduleFile) => {
         const moduleFilePath = path.resolve(modulePath, moduleFile);
-        return await isDataFile(moduleFilePath) ? moduleFilePath : null;
+        return await _isDataFile(moduleFilePath) ? moduleFilePath : null;
       }));
       files[moduleName] = moduleFiles.filter((file) => file !== null);
-    } else if (await isDataFile(modulePath)) {
+    } else if (await _isDataFile(modulePath)) {
       files._.push(modulePath);
     }
   }
@@ -52,7 +109,7 @@ async function readFilenames(baseDir = DEFAULT_DATA_DIR) {
 /**
  * Read the contents of the given array of files, producing a digest for each.
  * @param  {Array<string>} filenames Paths to readable data files.
- * @return {Array<Object>}           [description]
+ * @return {Array<Object>} Representation of all files read.
  */
 async function readFiles(filenames) {
   return await Promise.all(arrayify(filenames).map(async (filename) => {
@@ -71,8 +128,34 @@ async function readFiles(filenames) {
   }));
 }
 
+/**
+ * Parse and validate the given set of files using the given validator.
+ * @param  {Object} ctx Application context
+ * @param  {Array<Object>} files Files to validate (as output by readFiles)
+ * @param  {Function} validate Expected to take the parsed file as input, and throw if invalid.
+ * @return {Array<Object>} Files that were successfully parsed and passed validation.
+ */
+function validateFiles(ctx, files, validate) {
+  const validated = [];
+  for (const file of files) {
+    try {
+      const parsed = _parseFile(file);
+      validate(parsed);
+      validated.push({
+        name: file.name,
+        parsed: parsed,
+        digest: file.digest,
+      });
+    } catch (err) {
+      ctx.log(`Error parsing and validating data file ${file.name}`, 'error', err);
+    }
+  }
+  return validated;
+}
+
 module.exports = {
-  isDataFile,
+  hasChanged,
   readFilenames,
   readFiles,
+  validateFiles,
 };

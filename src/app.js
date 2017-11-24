@@ -1,7 +1,13 @@
 'use strict';
+const project = require('../package.json');
 const Database = require('./models');
-const Bot = require('./chat');
-const Games = require('./games');
+const Bot = require('./chat').Bot;
+const data = require('./lib/data');
+const Validator = require('./lib/validator').DataFileValidator;
+const games = require('./lib/games');
+
+// Directory is relative to the project root
+const DATA_DIR = process.env.DATA_DIR || './data';
 
 const context = {};
 context.log = console.log;
@@ -9,17 +15,39 @@ context.log = console.log;
 /**
  * Initialize the application, populating the provided context object.
  * @param {Object} ctx Application context
- * @return {undefined}
  */
 async function initialize(ctx) {
   ctx.db = await Database.initialize();
-  ctx.bot = await Bot.initialize(ctx);
+  ctx.bot = new Bot();
+  await ctx.bot.initialize(ctx);
+}
 
-  try {
-    await Games.initialize(ctx);
-  } catch (e) {
-    ctx.log(`Encountered an error synchronizing games`, e);
+/**
+ * Load application data files.
+ * @param {Object} ctx Application context
+ */
+async function load(ctx) {
+  const validator = new Validator();
+  await validator.load(ctx);
+
+  const modules = await data.readFilenames(DATA_DIR);
+  if (modules.hasOwnProperty('games')) {
+    const gameFiles = await data.readFiles(modules.games);
+    const validate = (defn) => validator.validateGame(defn);
+    const gameDefinitions = data.validateFiles(ctx, gameFiles, validate);
+    for (const definition of gameDefinitions) {
+      if (await data.hasChanged(ctx, definition)) {
+        await games.upsertGame(ctx, definition.parsed);
+      }
+    }
   }
 }
 
-initialize(context);
+initialize(context).then(async () => {
+  await load(context);
+  await context.bot.login();
+}).then(() => {
+  context.log(`${project.name} ${project.version} has started.`, 'info');
+}).catch((err) => {
+  context.log(`Fatal error initializing ${project.name} ${project.version}`, 'error', err);
+});

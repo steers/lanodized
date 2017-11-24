@@ -3,36 +3,59 @@ const Discord = require('discord.js');
 const Commands = require('./commands');
 const Events = require('./events');
 const notification = require('./lib/notification');
-
-const client = new Discord.Client();
-client.api = Discord;
-client.config = require('./config').chat;
-
-client.commands = new Map();
-client.aliases = new Map();
-client.polls = new Map();
+const config = require('./config').chat;
 
 /**
- * Initialize the chat bot application and log into Discord.
- * @param {Object} ctx Application context
- * @return {Object} Chat client object
+ * A fantastic chat bot. Truly amazing.
  */
-async function initialize(ctx) {
-  try {
-    await Commands.initialize(ctx, client);
-    await Events.initialize(ctx, client);
+class Bot {
+  /**
+   * Create a new Discord chat bot.
+   */
+  constructor() {
+    this.api = Discord;
+    this.client = new this.api.Client();
+    this._config = JSON.parse(JSON.stringify(config));
 
-    const commands = Array.from(client.commands.values());
-    const triggers = [].concat(...commands.map((command) => {
-      return command.conf.triggers || [];
-    }));
-    await notification.syncTriggers(ctx, triggers);
-
-    await client.login(client.config.discord.token);
-  } catch (e) {
-    ctx.log(`Encountered an error initializing chat`, e);
+    this.commands = new Map();
+    this.aliases = new Map();
+    this.polls = new Map();
   }
-  return client;
+
+  /**
+   * Retrieve the chat API token used by this bot.
+   * @return {string} Discord API token
+   */
+  get token() {
+    return this._config.discord.token;
+  }
+
+  /**
+   * Initialize the chat bot application.
+   * @param {Object} ctx Application context
+   */
+  async initialize(ctx) {
+    try {
+      await Commands.initialize(ctx, this);
+      await Events.initialize(ctx, this.client);
+
+      const commands = Array.from(this.commands.values());
+      const triggers = [].concat(...commands.map((command) => {
+        return command.conf.triggers || [];
+      }));
+      await notification.syncTriggers(ctx, triggers);
+    } catch (err) {
+      ctx.log(`Encountered an error initializing chat`, 'error', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Log into the Discord API with the configured token.
+   */
+  async login() {
+    await this.client.login(this.token);
+  }
 }
 
-module.exports.initialize = initialize;
+module.exports.Bot = Bot;
