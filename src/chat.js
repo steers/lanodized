@@ -45,7 +45,6 @@ class Bot {
   async initialize(ctx) {
     try {
       await Commands.initialize(ctx, this);
-      console.log(`commands initialized: ${JSON.stringify(this.commands.keys())}`);
       await Events.initialize(ctx, this);
 
       const commands = Array.from(this.commands.values());
