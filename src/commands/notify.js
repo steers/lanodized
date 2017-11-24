@@ -55,12 +55,12 @@ template.error = Template.compile([
 /**
  * Execute the notify command in response to an incoming chat message.
  * @param  {Object} ctx Application context
- * @param  {Object} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
  * @return {Object} Result metadata from command execution.
  */
-async function run(ctx, client, message, argv) {
+async function run(ctx, bot, message, argv) {
   const args = parseArgs(argv, definition.options);
   const channels = arrayify(args.channel);
   const roles = arrayify(args.role);
@@ -105,10 +105,10 @@ async function run(ctx, client, message, argv) {
 
   // Detect whether a given string is a mention of the specified type
   const mentioned = {
-    everyone: (s) => client.api.MessageMentions.EVERYONE_PATTERN.test(s),
-    channel: (s) => client.api.MessageMentions.CHANNELS_PATTERN.test(s),
-    role: (s) => client.api.MessageMentions.ROLES_PATTERN.test(s),
-    user: (s) => client.api.MessageMentions.USERS_PATTERN.test(s),
+    everyone: (s) => bot.api.MessageMentions.EVERYONE_PATTERN.test(s),
+    channel: (s) => bot.api.MessageMentions.CHANNELS_PATTERN.test(s),
+    role: (s) => bot.api.MessageMentions.ROLES_PATTERN.test(s),
+    user: (s) => bot.api.MessageMentions.USERS_PATTERN.test(s),
   };
 
   let mentionedEveryone = false;

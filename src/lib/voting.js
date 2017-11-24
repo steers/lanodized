@@ -15,7 +15,7 @@ class BallotBox {
    * Create a new BallotBox for the given message, voting on the given alternatives.
    * @param  {Object} ctx Application context
    * @param  {Object} ctx.db Database context
-   * @param  {Client} client Chat client object
+   * @param  {Bot} bot Chat bot instance
    * @param  {Message} message Chat message that will be collecting votes
    * @param  {User} pollster User that called the vote
    * @param  {Object} poll Definition of the poll being created
@@ -24,9 +24,9 @@ class BallotBox {
    * @param  {Map} choices Map of emoji to vote option
    * @param  {Function} callback Function called with results on poll conclusion
    */
-  constructor(ctx, client, message, pollster, poll, choices, callback) {
+  constructor(ctx, bot, message, pollster, poll, choices, callback) {
     this.db = ctx.db;
-    this.client = client;
+    this.bot = bot;
     this.message = message;
     this.pollster = pollster;
     this.definition = poll;
@@ -84,7 +84,7 @@ class BallotBox {
       UserId: user.id,
       ChannelId: channel.id,
     });
-    this.client.polls.set(this.message.id, this);
+    this.bot.polls.set(this.message.id, this);
 
     const self = this;
     this.timer = setTimeout(async () => {
@@ -103,7 +103,7 @@ class BallotBox {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    this.client.polls.delete(this.message.id);
+    this.bot.polls.delete(this.message.id);
 
     const results = await this.db.DiscordUser.findAll({
       attributes: ['snowflake'],

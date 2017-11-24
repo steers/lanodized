@@ -6,14 +6,14 @@ const basename = path.basename(module.filename);
 
 /**
  * Dynamically load all chat commands from their local definition files into
- * maps defined in the chat client object.
+ * maps defined in the chat bot object.
  * @param  {Object} ctx Application context
- * @param  {Object} client Chat client object
- * @param  {Object} client.commands Map from canonical name to command object
- * @param  {Object} client.aliases Map from alias to canonical name
+ * @param  {Bot} bot Chat bot instance
+ * @param  {Map} bot.commands Map from canonical name to command object
+ * @param  {Map} bot.aliases Map from alias to canonical name
  * @return {undefined}
  */
-async function initialize(ctx, client) {
+async function initialize(ctx, bot) {
   const files = await readdir(__dirname);
   files.filter((file) => {
     return (file.indexOf('.') !== 0)
@@ -22,9 +22,9 @@ async function initialize(ctx, client) {
   }).forEach((file) => {
     let cmd = require(path.resolve(__dirname, file));
     if (!cmd.conf.enabled) return;
-    client.commands.set(cmd.help.name, cmd);
+    bot.commands.set(cmd.help.name, cmd);
     cmd.help.aliases.forEach((alias) => {
-      client.aliases.set(alias, cmd.help.name);
+      bot.aliases.set(alias, cmd.help.name);
     });
   });
 };

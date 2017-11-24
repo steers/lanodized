@@ -48,12 +48,12 @@ template.detailed = Template.compile([
 /**
  * Execute the game command in response to an incoming chat message.
  * @param  {Object} ctx Application context
- * @param  {Object} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
  * @return {Object} Result metadata from command execution.
  */
-async function run(ctx, client, message, argv) {
+async function run(ctx, bot, message, argv) {
   const args = parseArgs(argv, definition.options);
   const name = args._.join(' ');
   delete args._;

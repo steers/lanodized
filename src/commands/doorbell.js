@@ -51,15 +51,15 @@ template.response = Template.compile([
 /**
  * Execute the doorbell command in response to an incoming chat message.
  * @param  {Object} ctx Application context
- * @param  {Object} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
  * @return {Object} Result metadata from command execution.
  */
-async function run(ctx, client, message, argv) {
+async function run(ctx, bot, message, argv) {
   const args = parseArgs(argv, definition.options);
   if (args.help) {
-    const content = Help.usage(definition, {prefix: client.config.prefix, detailed: true});
+    const content = Help.usage(definition, {prefix: bot.prefix, detailed: true});
     await chat.respondDirect(message, content);
     return {
       actions: ['provided help'],
@@ -96,7 +96,7 @@ async function run(ctx, client, message, argv) {
     user: message.author.username,
     now: rangAt,
   });
-  const triggered = await notification.notify(ctx, client, 'doorbell', ringaling);
+  const triggered = await notification.notify(ctx, bot, 'doorbell', ringaling);
   if (triggered.length === 0) {
     ctx.log(`@${message.author.username} rang the doorbell, but no one could hear it!`, 'error');
     return {

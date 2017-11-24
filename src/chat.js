@@ -23,6 +23,14 @@ class Bot {
   }
 
   /**
+   * Retrieve the command prefix used by this bot.
+   * @return {string} Chat command prefix
+   */
+  get prefix() {
+    return this._config.prefix;
+  }
+
+  /**
    * Retrieve the chat API token used by this bot.
    * @return {string} Discord API token
    */
@@ -37,7 +45,8 @@ class Bot {
   async initialize(ctx) {
     try {
       await Commands.initialize(ctx, this);
-      await Events.initialize(ctx, this.client);
+      console.log(`commands initialized: ${JSON.stringify(this.commands.keys())}`);
+      await Events.initialize(ctx, this);
 
       const commands = Array.from(this.commands.values());
       const triggers = [].concat(...commands.map((command) => {

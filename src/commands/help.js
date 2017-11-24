@@ -20,32 +20,32 @@ const configuration = {
 /**
  * Execute the help command in response to an incoming chat message.
  * @param  {Object} ctx Application context
- * @param  {Object} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {Object} message Chat message
  * @param  {string[]} argv Tokenized arguments
  * @return {Object} Result metadata from command execution.
  */
-async function run(ctx, client, message, argv) {
+async function run(ctx, bot, message, argv) {
   const args = parseArgs(argv, definition.options);
   let [command] = args._;
 
   let msg;
   if (command) {
     // Strip off the command prefix if it was included in the argument
-    if (command.startsWith(client.config.prefix)) {
-      command = command.slice(client.config.prefix.length);
+    if (command.startsWith(bot.prefix)) {
+      command = command.slice(bot.prefix.length);
     }
     // Try to find the command with the given name/alias
-    const cmd = client.commands.get(command) || client.commands.get(client.aliases.get(command));
-    msg = cmd ? Help.usage(cmd.help, {prefix: client.config.prefix, detailed: true})
+    const cmd = bot.commands.get(command) || bot.commands.get(bot.aliases.get(command));
+    msg = cmd ? Help.usage(cmd.help, {prefix: bot.prefix, detailed: true})
       : `Sorry, I don't know \`${command}\``;
   } else {
     const lines = [
-      `Hey ${message.author.username}! I'm ${client.user.username} and here's what I can do:`,
+      `Hey ${message.author.username}! I'm ${bot.client.user.username} and here's what I can do:`,
     ];
     // Without a specific command, get basic usage for all of em
-    for (const cmd of client.commands.values()) {
-      lines.push(Help.usage(cmd.help, {prefix: client.config.prefix}));
+    for (const cmd of bot.commands.values()) {
+      lines.push(Help.usage(cmd.help, {prefix: bot.prefix}));
     }
     msg = lines.join('\n');
   }

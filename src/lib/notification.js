@@ -118,12 +118,12 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
  * Send provided content to all notification targets configured for the given trigger.
  * @param  {Object} ctx Application context
  * @param  {Object} ctx.db Database context
- * @param  {Client} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {string} trigger Trigger name
  * @param  {string} content Notification text
  * @return {Array<Message>} Messages sent as a result of resolving triggered notifications
  */
-async function notify(ctx, client, trigger, content) {
+async function notify(ctx, bot, trigger, content) {
   const notifications = await ctx.db.Notification.findAll({
     attributes: ['id', 'target'],
     include: [{
@@ -148,7 +148,7 @@ async function notify(ctx, client, trigger, content) {
   for (const notification of notifications) {
     const target = notification.target || {};
     const guildName = notification.Guild.name;
-    const guild = client.guilds.get(notification.Guild.snowflake);
+    const guild = bot.client.guilds.get(notification.Guild.snowflake);
     if (target.hasOwnProperty('channel')) {
       if (guild) {
         const channel = guild.channels.get(target.channel);

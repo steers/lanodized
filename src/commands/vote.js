@@ -60,12 +60,12 @@ template.error = Template.compile([
 /**
  * Execute the defined command in response to an incoming chat message.
  * @param  {Object} ctx Application context
- * @param  {Client} client Chat client object
+ * @param  {Bot} bot Chat bot instance
  * @param  {Message} message Chat message
  * @param  {Array<string>} argv Tokenized arguments
  * @return {Object} Result metadata from command execution.
  */
-async function run(ctx, client, message, argv) {
+async function run(ctx, bot, message, argv) {
   const args = parseArgs(argv, definition.options);
   const subject = args._.join(' ');
   delete args._;
@@ -127,7 +127,7 @@ async function run(ctx, client, message, argv) {
     };
 
     const vote =
-        new voting.BallotBox(ctx, client, pollMessage, message.author, poll, choices, callback);
+        new voting.BallotBox(ctx, bot, pollMessage, message.author, poll, choices, callback);
 
     await vote.start(seconds);
     actions.push('opened voting');
