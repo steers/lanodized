@@ -46,6 +46,11 @@ const configuration = {
 };
 
 const template = {};
+template.list = Template.compile([
+  '{{#if operation}}{{operation}} {{/if}}Here are the notifications enabled for {{guild}}:',
+  '{{#if notifications.length}}{{#each notifications}}\t`{{Trigger.name}}` => {{#with target}}{{#if channel}}<#{{channel}}>{{else if role}}<@&{{role}}>{{else if user}}<@{{user}}>{{/if}}{{/with}}',
+  '{{/each}}{{else}}**Bupkis!**{{/if}}',
+].join('\n'), {noEscape: true});
 template.error = Template.compile([
   `<@{{author.id}}>, Sorry, I couldn't configure your notifications.`,
   'Command: [ **{{command}}** ]',
@@ -186,8 +191,43 @@ async function run(ctx, bot, message, argv) {
   const result = {};
   const actions = [];
   try {
-    await notification.addNotifications(ctx, guild.id, message.author.id, triggers, notifiable);
-    actions.push('added notifications');
+    if (args.list) {
+      const notifications = await notification.listNotifications(ctx, {
+        guild: guild.id,
+        triggers: triggers,
+        targets: notifiable,
+      });
+      await chat.respond(message, template.list({
+        guild: guild.name,
+        notifications: notifications,
+      }));
+      actions.push('listed notifications');
+    } else if (args.delete) {
+      await notification.deleteNotifications(ctx, guild.id, triggers, notifiable);
+      actions.push('deleted notifications');
+      const notifications = await notification.listNotifications(ctx, {
+        guild: guild.id,
+      });
+      await chat.respond(message, template.list({
+        operation: '**BALEETED!**',
+        guild: guild.name,
+        notifications: notifications,
+      }));
+      actions.push('listed notifications');
+    } else {
+      await notification.addNotifications(ctx, guild.id, message.author.id, triggers, notifiable);
+      actions.push('added notifications');
+      const notifications = await notification.listNotifications(ctx, {
+        guild: guild.id,
+        triggers: triggers,
+      });
+      await chat.respond(message, template.list({
+        operation: '**ADDED!**',
+        guild: guild.name,
+        notifications: notifications,
+      }));
+      actions.push('listed notifications');
+    }
   } catch (err) {
     const errorDescription = template.error({
       author: message.author,

@@ -18,7 +18,7 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
   if (!triggers || triggers.length === 0) {
     throw new Error('Notification trigger(s) required');
   }
-  if (!targets) {
+  if (!targets || typeof targets !== 'object') {
     throw new Error('Notification target(s) required, null provided');
   }
   const channels = Array.from(targets.channels || []);
@@ -60,15 +60,15 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
     };
 
     await ctx.db.sequelize.transaction(async (t) => {
-      const targetSearch = {$or: {}};
+      const targetSearch = {$or: []};
       if (channels.length > 0) {
-        targetSearch.$or.channel = {$in: channels};
+        targetSearch.$or.push({channel: {$in: channels}});
       }
       if (roles.length > 0) {
-        targetSearch.$or.role = {$in: roles};
+        targetSearch.$or.push({role: {$in: roles}});
       }
       if (users.length > 0) {
-        targetSearch.$or.user = {$in: users};
+        targetSearch.$or.push({user: {$in: users}});
       }
       const notifications = await ctx.db.Notification.findAll({
         transaction: t,
@@ -115,6 +115,114 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
 }
 
 /**
+ * Deletes (disables) notifications for the given group of targets, restricting to the given set
+ * of targets (if any).
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
+ * @param {string} guildId Snowflake of guild to create the notifications on
+ * @param {Array<string>} triggers Bot triggers to notify on
+ * @param {Object} targets Group of targets to notify
+ * @param {Array|Set<string>} targets.channels Channel IDs to notify
+ * @param {Array|Set<string>} targets.roles Role IDs to notify
+ * @param {Array|Set<string>} targets.users User Ids to notify
+ */
+async function deleteNotifications(ctx, guildId, triggers, targets) {
+  if (!targets || typeof targets !== 'object') {
+    throw new Error('Notification target(s) required, null provided');
+  }
+  const channels = Array.from(targets.channels || []);
+  const roles = Array.from(targets.roles || []);
+  const users = Array.from(targets.users || []);
+  if (!(channels.length > 0 || roles.length > 0 || users.length > 0)) {
+    throw new Error('Notification target(s) required, zero provided');
+  }
+
+  await ctx.db.sequelize.transaction(async (t) => {
+    const notifications = await listNotifications(ctx, {
+      transaction: t,
+      guild: guildId,
+      triggers: triggers,
+      targets: targets,
+    });
+    for (const notification of notifications) {
+      await notification.update({enabled: false}, {transaction: t});
+    }
+  });
+}
+
+/**
+ * List the enabled notifications configured for the given guild
+ * @param {Object} ctx Application context
+ * @param {Object} ctx.db Database context
+ * @param {Object} options Notification filter options
+ * @param {boolean} options.enabled Enabled status of the notification (default: true)
+ * @param {string} options.guild Snowflake of guild that notifications were configured for
+ * @param {Object} options.targets Group of targets to filter
+ * @param {Array|Set<string>} options.targets.channels Notified channel IDs
+ * @param {Array|Set<string>} options.targets.roles Notified role IDs
+ * @param {Array|Set<string>} options.targets.users Notified user IDs
+ * @param {Array<string>} options.triggers Specific triggers to filter
+ * @param {Transaction} options.transaction Optional transaction to query under
+ * @return {Array<Notification>} Enabled notifications configured for this guild
+ */
+async function listNotifications(ctx, options = {}) {
+  const guild = {
+    model: ctx.db.DiscordGuild,
+    as: 'Guild',
+    required: true,
+    attributes: ['snowflake'],
+  };
+  if (options.guild) {
+    guild.where = {
+      snowflake: options.guild,
+    };
+  }
+  const trigger = {
+    model: ctx.db.Trigger,
+    required: true,
+    attributes: ['name', 'properties'],
+  };
+  const triggers = arrayify(options.triggers);
+  if (triggers.length > 0) {
+    trigger.where = {
+      name: {
+        $in: triggers.map((trigger) => trigger.toLowerCase()),
+      },
+    };
+  }
+  const where = {
+    enabled: options.hasOwnProperty('enabled') ? Boolean(options.enabled) : true,
+  };
+  if (options.targets) {
+    console.log(`filtering on targets!`);
+    for (const type of ['channels', 'roles', 'users']) {
+      const targets = Array.from(options.targets[type] || []);
+      const target = type.slice(0, -1); // strip the 's', notifications each have one target
+
+      if (targets.length > 0) {
+        console.log(`filtering on ${type}!`);
+        if (!where.hasOwnProperty('target')) {
+          where.target = {$or: []};
+        }
+        where.target.$or.push({
+          [target]: {
+            $in: targets,
+          },
+        });
+      }
+    }
+  }
+
+  console.log(`where: ${JSON.stringify(where)}`);
+
+  return await ctx.db.Notification.findAll({
+    transaction: options.transaction || null,
+    include: [guild, trigger],
+    where: where,
+  });
+}
+
+/**
  * Send provided content to all notification targets configured for the given trigger.
  * @param  {Object} ctx Application context
  * @param  {Object} ctx.db Database context
@@ -124,27 +232,8 @@ async function addNotifications(ctx, guildId, creatorId, triggers, targets) {
  * @return {Array<Message>} Messages sent as a result of resolving triggered notifications
  */
 async function notify(ctx, bot, trigger, content) {
-  const notifications = await ctx.db.Notification.findAll({
-    attributes: ['id', 'target'],
-    include: [{
-      model: ctx.db.Trigger,
-      required: true,
-      attributes: ['name', 'properties'],
-      where: {
-        name: trigger.toLowerCase(),
-      },
-    }, {
-      model: ctx.db.DiscordGuild,
-      as: 'Guild',
-      required: true,
-      attributes: ['snowflake'],
-    }],
-    where: {
-      enabled: true,
-    },
-  });
-
   const sent = [];
+  const notifications = await listNotifications(ctx, {triggers: trigger});
   for (const notification of notifications) {
     const target = notification.target || {};
     const guildName = notification.Guild.name;
@@ -204,6 +293,8 @@ async function syncTriggers(ctx, triggers) {
 
 module.exports = {
   addNotifications,
+  deleteNotifications,
+  listNotifications,
   notify,
   syncTriggers,
 };
