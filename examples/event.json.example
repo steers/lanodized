@@ -1,0 +1,48 @@
+{
+  "name": "Example Party",
+  "iteration": 1,
+  "start": "2017-11-24T19:30:00-05:00",
+  "end": "2017-11-25T10:00:00-05:00",
+  "events": [
+    {
+      "type": "Break",
+      "title": "Setup & Install",
+      "description": "Hook up your rig and grab those last-minute updates",
+      "start": "2017-11-24T20:00:00-05:00",
+      "minutes": 60
+    },
+    {
+      "type": "Free Play",
+      "title": "Free Play",
+      "description": "Anything goes!",
+      "start": "2017-11-24T21:00:00-05:00",
+      "minutes": 120,
+      "games": []
+    },
+    {
+      "type": "Dedicated",
+      "title": "Rocket League",
+      "start": "2017-11-24T23:00:00-05:00",
+      "minutes": 120,
+      "games": [
+        "rocketleague"
+      ]
+    },
+    {
+      "type": "Break",
+      "title": "Sleep",
+      "description": "You don't have to go home, but you can't stay here",
+      "start": "2017-11-25T01:00:00-05:00",
+      "minutes": 420
+    },
+    {
+      "type": "Dedicated",
+      "title": "Rocket League",
+      "start": "2017-11-25T08:00:00-05:00",
+      "minutes": 120,
+      "games": [
+        "rocketleague"
+      ]
+    }
+  ]
+}

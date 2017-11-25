@@ -4,4 +4,7 @@ config/*.json
 .vagrant
 *-console.log
 
+*.zip
+*.tgz
+*.tar.gz
 data/**/*.json

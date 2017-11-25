@@ -1,0 +1,46 @@
+{
+  "info": {
+    "title": "Rocket League",
+    "released": "2015-08-07",
+    "links": {
+      "buy": {
+        "windows": "http://store.steampowered.com/app/252950/Rocket_League/",
+        "mac": "http://store.steampowered.com/app/252950/Rocket_League/",
+        "linux": "http://store.steampowered.com/app/252950/Rocket_League/",
+        "ps4": "https://www.playstation.com/en-us/games/rocket-league-ps4/",
+        "xbone": "https://www.microsoft.com/en-us/store/p/rocket-league/c125w9bg2k0v"
+      },
+      "info": {
+        "default": "https://www.rocketleague.com/"
+      }
+    },
+    "properties": {
+      "steamId": 252950
+    }
+  },
+  "aliases": [
+    "rl",
+    "rocketleague"
+  ],
+  "genres": [
+    "sports",
+    "vehicle"
+  ],
+  "platforms": [
+    "windows",
+    "mac",
+    "linux",
+    "ps4",
+    "xbone"
+  ],
+  "modes": [
+    {
+      "name": "Multiplayer",
+      "short": "multiplayer",
+      "serverSize": 8,
+      "groupSize": 4,
+      "description": "Rocket-powered car football!",
+      "properties": null
+    }
+  ]
+}
