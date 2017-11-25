@@ -47,6 +47,10 @@ template.ack = Template.compile([
 template.response = Template.compile([
   'Never fear! {{responder}} is on their way to you now 🏃',
 ].join('\n'), {noEscape: true});
+template.timeout = Template.compile([
+  'Hmm... Everyone must be having too much fun gaming. 🤦',
+  `It's been {{minutes}} minutes. Please try ringing the doorbell again.`,
+].join('\n'), {noEscape: true});
 
 /**
  * Execute the doorbell command in response to an incoming chat message.
@@ -109,16 +113,24 @@ async function run(ctx, bot, message, argv) {
   const reactFilter = (reaction, user) => {
     return !user.bot && !acknowledgement;
   };
+  const timeout = 5 * 60 * 1000; // 5 minutes
   for (const sent of triggered) {
     await sent.react(Emoji.get(':door:'));
-    handlers.set(sent.id, sent.createReactionCollector(reactFilter, {time: 300000}));
+    handlers.set(sent.id, sent.createReactionCollector(reactFilter, {time: timeout}));
   }
+  const timedOut = setTimeout(async () => {
+    const sorry = template.timeout({
+      minutes: ((Date.now() - rangAt.getTime()) / 60000).toFixed(1),
+    });
+    await chat.respond(greetingMessage, sorry);
+  }, timeout);
   const reactHandle = async (reaction) => {
     const responder = reaction.users.filter((user) => !user.bot).first();
     if (responder) {
       acknowledgement = true;
       // Stop handling new reactions first, before sending out messages
       handlers.forEach((handler) => handler.stop('Doorbell was answered'));
+      clearTimeout(timedOut);
 
       const ack = template.ack({
         responder: responder.username,
